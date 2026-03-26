@@ -1,0 +1,12 @@
+{
+  "titulo": "Gran Sorteo",
+  "subtitulo": "¡Participá y ganás increíbles premios!",
+  "totalTickets": 100,
+  "soldTickets": 78,
+  "ticketPrice": 500,
+  "premios": [
+    { "nombre": "1er Premio – Heladera",  "cantidad": 1, "emoji": "🥇" },
+    { "nombre": "2do Premio – Microondas","cantidad": 1, "emoji": "🥈" },
+    { "nombre": "3er Premio – Cafetera",  "cantidad": 2, "emoji": "🥉" }
+  ]
+}

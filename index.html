@@ -1,0 +1,927 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Rifa – Club 17 de Octubre</title>
+  <link rel="icon" type="image/png" href="logo17.png" />
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Nunito:wght@400;700;900&display=swap');
+
+    :root {
+      --azul:    #1a4bc4;
+      --azul-dark: #0f2d7a;
+      --azul-mid:  #1640ab;
+      --rojo:    #cc1e2b;
+      --rojo-dark: #9e1520;
+      --blanco:  #ffffff;
+      --dorado:  #f5c518;
+      --dorado-dark: #c49a10;
+      --gris:    #e8edf5;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Nunito', sans-serif;
+      background: var(--azul-dark);
+      min-height: 100vh;
+      color: var(--blanco);
+      overflow-x: hidden;
+    }
+
+    /* ── CANVAS CONFETTI ── */
+    #confetti-canvas {
+      position: fixed; inset: 0;
+      pointer-events: none;
+      z-index: 9999;
+    }
+
+    /* ── STRIPES BG (camiseta) ── */
+    .stripes-bg {
+      position: fixed; inset: 0;
+      background-image: repeating-linear-gradient(
+        90deg,
+        rgba(26,75,196,0.18) 0px,
+        rgba(26,75,196,0.18) 36px,
+        rgba(255,255,255,0.04) 36px,
+        rgba(255,255,255,0.04) 72px
+      );
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ── STARS ── */
+    .stars { position: fixed; inset: 0; pointer-events: none; z-index: 0; }
+    .star {
+      position: absolute; background: white; border-radius: 50%;
+      animation: twinkle 3s infinite alternate;
+    }
+    @keyframes twinkle {
+      from { opacity: 0.15; transform: scale(1); }
+      to   { opacity: 0.9;  transform: scale(1.5); }
+    }
+
+    /* ── TICKER ── */
+    .ticker-strip {
+      background: var(--rojo);
+      padding: 9px 0;
+      overflow: hidden;
+      white-space: nowrap;
+      border-bottom: 3px solid var(--dorado);
+    }
+    .ticker-inner { display: inline-block; animation: ticker 26s linear infinite; }
+    .ticker-item {
+      display: inline-block;
+      padding: 0 28px;
+      font-family: 'Bebas Neue', cursive;
+      font-size: 1.1rem;
+      letter-spacing: 3px;
+      color: var(--blanco);
+    }
+    .ticker-dot { color: var(--dorado); }
+    @keyframes ticker { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+
+    /* ── MAIN CONTAINER ── */
+    .container {
+      position: relative;
+      z-index: 1;
+      max-width: 780px;
+      margin: 0 auto;
+      padding: 0 20px 60px;
+    }
+
+    /* ── HEADER ── */
+    header {
+      text-align: center;
+      padding: 36px 20px 20px;
+    }
+    .escudo-wrap {
+      display: inline-block;
+      position: relative;
+      margin-bottom: 16px;
+      animation: escudoFloat 3.5s ease-in-out infinite;
+      filter: drop-shadow(0 8px 24px rgba(0,0,0,0.5)) drop-shadow(0 0 20px rgba(245,197,24,0.35));
+    }
+    @keyframes escudoFloat {
+      0%,100% { transform: translateY(0) rotate(-1deg); }
+      50%      { transform: translateY(-14px) rotate(1deg); }
+    }
+    .escudo-wrap img { width: 130px; display: block; }
+
+    /* glow ring under logo */
+    .escudo-wrap::after {
+      content: '';
+      position: absolute;
+      bottom: -14px; left: 50%;
+      transform: translateX(-50%);
+      width: 80px; height: 16px;
+      background: radial-gradient(ellipse, rgba(245,197,24,0.45), transparent 70%);
+      border-radius: 50%;
+      animation: shadowPulse 3.5s ease-in-out infinite;
+    }
+    @keyframes shadowPulse {
+      0%,100% { opacity: 0.5; transform: translateX(-50%) scaleX(1); }
+      50%      { opacity: 1;   transform: translateX(-50%) scaleX(0.7); }
+    }
+
+    .club-tag {
+      font-family: 'Bebas Neue', cursive;
+      font-size: 1rem;
+      letter-spacing: 5px;
+      color: var(--dorado);
+      margin-bottom: 6px;
+      text-transform: uppercase;
+    }
+
+    .titulo-main {
+      font-family: 'Bebas Neue', cursive;
+      font-size: clamp(3rem, 9vw, 5.5rem);
+      letter-spacing: 6px;
+      line-height: 1;
+      color: var(--blanco);
+      text-shadow: 3px 3px 0 var(--azul-dark), 6px 6px 0 rgba(0,0,0,0.3);
+      animation: bounceIn 0.8s cubic-bezier(0.34,1.56,0.64,1) both;
+    }
+    .titulo-main span { color: var(--dorado); }
+
+    @keyframes bounceIn {
+      from { transform: scale(0.4); opacity: 0; }
+      to   { transform: scale(1);   opacity: 1; }
+    }
+
+    .subtitulo {
+      margin-top: 10px;
+      font-size: 1rem;
+      color: rgba(255,255,255,0.75);
+      letter-spacing: 0.5px;
+      animation: fadeUp 0.8s ease-out 0.4s both;
+    }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── DIVIDER ── */
+    .divider {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin: 24px 0;
+    }
+    .divider-line {
+      flex: 1;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--dorado), transparent);
+    }
+    .divider-icon { font-size: 1.4rem; }
+
+    /* ── STATS STRIP ── */
+    .tickets-strip {
+      display: flex;
+      justify-content: center;
+      gap: 14px;
+      flex-wrap: wrap;
+      margin-bottom: 10px;
+    }
+    .stat-pill {
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 14px;
+      padding: 14px 22px;
+      text-align: center;
+      backdrop-filter: blur(8px);
+      min-width: 110px;
+      animation: fadeUp 0.6s ease-out both;
+    }
+    .stat-pill:nth-child(1) { animation-delay:.1s; border-color: rgba(245,197,24,.35); }
+    .stat-pill:nth-child(2) { animation-delay:.2s; }
+    .stat-pill:nth-child(3) { animation-delay:.3s; border-color: rgba(245,197,24,.35); }
+    .stat-value {
+      font-family: 'Bebas Neue', cursive;
+      font-size: 2.2rem;
+      color: var(--dorado);
+      display: block;
+      letter-spacing: 2px;
+    }
+    .stat-label {
+      font-size: 0.72rem;
+      color: rgba(255,255,255,0.6);
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+    }
+
+    /* progress */
+    .progress-wrap {
+      height: 10px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 50px;
+      overflow: hidden;
+      margin: 12px 0 28px;
+    }
+    .progress-bar {
+      height: 100%;
+      border-radius: 50px;
+      background: linear-gradient(90deg, var(--azul), var(--dorado), var(--rojo));
+      background-size: 200%;
+      animation: progressShift 3s linear infinite;
+      transition: width 0.7s ease;
+    }
+    @keyframes progressShift {
+      0%   { background-position: 0%; }
+      100% { background-position: 200%; }
+    }
+
+    /* ── SECTION TITLE ── */
+    .section-title {
+      font-family: 'Bebas Neue', cursive;
+      font-size: 1.7rem;
+      letter-spacing: 4px;
+      color: var(--blanco);
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .section-title span { color: var(--dorado); }
+
+    /* ── PREMIOS ── */
+    .premio-card {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      background: rgba(255,255,255,0.05);
+      border-left: 4px solid var(--rojo);
+      border-radius: 12px;
+      padding: 14px 18px;
+      margin-bottom: 10px;
+      animation: slideRight 0.5s ease-out both;
+      transition: transform 0.2s, background 0.2s;
+    }
+    .premio-card:nth-child(1) { border-left-color: var(--dorado); }
+    .premio-card:nth-child(2) { border-left-color: #c0c0c0; }
+    .premio-card:nth-child(3) { border-left-color: #cd7f32; }
+    .premio-card:hover {
+      transform: translateX(6px);
+      background: rgba(255,255,255,0.09);
+    }
+    @keyframes slideRight {
+      from { opacity: 0; transform: translateX(-24px); }
+      to   { opacity: 1; transform: translateX(0); }
+    }
+    .premio-emoji { font-size: 2rem; flex-shrink: 0; }
+    .premio-info { flex: 1; }
+    .premio-nombre { font-weight: 900; font-size: 1.05rem; color: var(--blanco); }
+    .premio-cant   { font-size: 0.8rem; color: rgba(255,255,255,0.55); margin-top: 2px; }
+    .premio-num {
+      font-family: 'Bebas Neue', cursive;
+      font-size: 2rem;
+      color: rgba(255,255,255,0.15);
+      letter-spacing: 1px;
+    }
+
+    /* ── DRUM ── */
+    .drum-outer {
+      background: linear-gradient(160deg, var(--azul-dark) 0%, #081a52 100%);
+      border: 2px solid rgba(245,197,24,0.3);
+      border-radius: 24px;
+      padding: 36px 28px 30px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+      margin-bottom: 28px;
+    }
+    /* top red bar */
+    .drum-outer::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 5px;
+      background: linear-gradient(90deg, var(--rojo), var(--dorado), var(--rojo));
+      background-size: 200%;
+      animation: progressShift 2s linear infinite;
+    }
+
+    .drum-club {
+      font-family: 'Bebas Neue', cursive;
+      font-size: 0.9rem;
+      letter-spacing: 5px;
+      color: rgba(255,255,255,0.45);
+      margin-bottom: 4px;
+    }
+    .drum-title {
+      font-family: 'Bebas Neue', cursive;
+      font-size: 2.4rem;
+      letter-spacing: 5px;
+      color: var(--blanco);
+      margin-bottom: 4px;
+    }
+    .drum-prize-label {
+      font-size: 0.88rem;
+      font-weight: 700;
+      letter-spacing: 1px;
+      color: var(--dorado);
+      min-height: 1.4em;
+      margin-bottom: 20px;
+    }
+
+    .drum-display {
+      width: 260px;
+      height: 110px;
+      background: #050d20;
+      border: 3px solid var(--dorado);
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Bebas Neue', cursive;
+      font-size: 4.5rem;
+      color: var(--dorado);
+      letter-spacing: 8px;
+      text-shadow: 0 0 24px rgba(245,197,24,0.9);
+      box-shadow: inset 0 0 28px rgba(245,197,24,0.07), 0 0 28px rgba(245,197,24,0.18);
+      margin: 0 auto 26px;
+      overflow: hidden;
+    }
+    .drum-rolling { animation: drumRoll 0.07s steps(1) infinite; }
+    @keyframes drumRoll {
+      0%  { opacity:1; transform:translateY(0); }
+      49% { opacity:0; transform:translateY(-18px); }
+      50% { opacity:0; transform:translateY(18px); }
+      100%{ opacity:1; transform:translateY(0); }
+    }
+
+    .btn-sortear {
+      background: linear-gradient(135deg, var(--rojo) 0%, var(--rojo-dark) 100%);
+      color: var(--blanco);
+      border: none;
+      border-radius: 50px;
+      padding: 16px 56px;
+      font-family: 'Bebas Neue', cursive;
+      font-size: 2rem;
+      letter-spacing: 4px;
+      cursor: pointer;
+      box-shadow: 0 8px 28px rgba(204,30,43,0.5);
+      position: relative;
+      overflow: hidden;
+      animation: pulseSortear 2s ease-in-out infinite;
+      transition: transform 0.15s;
+    }
+    .btn-sortear::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.18), transparent);
+      transform: translateX(-100%);
+      animation: shimmer 2.5s infinite;
+    }
+    @keyframes shimmer { 100% { transform: translateX(100%); } }
+    @keyframes pulseSortear {
+      0%,100% { box-shadow: 0 8px 28px rgba(204,30,43,0.5); }
+      50%      { box-shadow: 0 14px 40px rgba(204,30,43,0.8), 0 0 0 6px rgba(204,30,43,0.15); }
+    }
+    .btn-sortear:hover:not(:disabled) {
+      transform: scale(1.06);
+      animation: none;
+      box-shadow: 0 14px 40px rgba(204,30,43,0.8);
+    }
+    .btn-sortear:disabled { opacity: 0.5; cursor: not-allowed; animation: none; }
+
+    .sorteo-status {
+      margin-top: 14px;
+      font-size: 0.85rem;
+      color: rgba(255,255,255,0.55);
+      letter-spacing: 0.5px;
+      min-height: 1.4em;
+    }
+
+    /* ── WINNERS ── */
+    .winner-card {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(245,197,24,0.2);
+      border-radius: 14px;
+      padding: 16px 20px;
+      margin-bottom: 12px;
+      animation: popIn 0.5s cubic-bezier(0.34,1.56,0.64,1) both;
+    }
+    @keyframes popIn {
+      from { opacity: 0; transform: scale(0.5) rotate(-4deg); }
+      to   { opacity: 1; transform: scale(1) rotate(0deg); }
+    }
+    .winner-pos {
+      width: 46px; height: 46px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Bebas Neue', cursive;
+      font-size: 1.4rem;
+      flex-shrink: 0;
+    }
+    .pos-1 { background: linear-gradient(135deg,#ffd700,#ffb800); color:#1a1a2e; box-shadow:0 0 18px rgba(255,215,0,.6); }
+    .pos-2 { background: linear-gradient(135deg,#c0c0c0,#909090); color:#1a1a2e; }
+    .pos-3 { background: linear-gradient(135deg,#cd7f32,#9e5e20); color:#fff; }
+    .pos-n { background: var(--azul-mid); color:#fff; }
+    .winner-info { flex: 1; }
+    .winner-prize { font-weight: 900; font-size: 1rem; color: var(--dorado); }
+    .winner-number {
+      font-family: 'Bebas Neue', cursive;
+      font-size: 2rem;
+      letter-spacing: 4px;
+      color: var(--blanco);
+    }
+    .winner-icon { font-size: 2rem; }
+
+    /* ── RESET BTN ── */
+    .btn-reset {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 12px 30px;
+      border-radius: 50px; border: 2px solid rgba(255,255,255,0.25);
+      background: transparent;
+      color: rgba(255,255,255,0.7);
+      font-family: 'Bebas Neue', cursive;
+      font-size: 1.2rem; letter-spacing: 2px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-reset:hover {
+      border-color: var(--rojo);
+      color: var(--blanco);
+      background: rgba(204,30,43,0.15);
+    }
+
+    /* ── ERROR ── */
+    .error-box {
+      background: rgba(204,30,43,0.15);
+      border: 1px solid rgba(204,30,43,0.4);
+      border-radius: 14px;
+      padding: 24px; text-align: center;
+      color: #ff8fa3; font-weight: 700;
+      margin-top: 40px;
+    }
+
+    /* ── LOADING ── */
+    .loading {
+      text-align: center; padding: 100px 20px;
+      font-family: 'Bebas Neue', cursive;
+      font-size: 2rem; letter-spacing: 4px;
+      color: var(--dorado);
+      animation: pulseSortear 1s ease-in-out infinite;
+    }
+
+    /* ── GRAN PREMIO OVERLAY ── */
+    .gran-premio-overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.7);
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      z-index: 9990;
+      animation: overlayIn 0.4s ease-out;
+      backdrop-filter: blur(4px);
+    }
+    @keyframes overlayIn {
+      from { opacity: 0; } to { opacity: 1; }
+    }
+    .gran-premio-badge {
+      font-family: 'Bebas Neue', cursive;
+      font-size: clamp(2.5rem, 8vw, 5rem);
+      letter-spacing: 8px;
+      color: var(--dorado);
+      text-shadow: 0 0 40px rgba(245,197,24,0.9), 0 0 80px rgba(245,197,24,0.5);
+      animation: badgePulse 0.8s ease-in-out infinite alternate;
+      margin-bottom: 10px;
+    }
+    @keyframes badgePulse {
+      from { transform: scale(1);    filter: brightness(1); }
+      to   { transform: scale(1.06); filter: brightness(1.4); }
+    }
+    .gran-premio-sub {
+      font-family: 'Bebas Neue', cursive;
+      font-size: clamp(1rem, 3vw, 1.6rem);
+      letter-spacing: 5px;
+      color: rgba(255,255,255,0.7);
+      margin-bottom: 36px;
+    }
+    .gran-premio-drum {
+      width: clamp(260px, 50vw, 380px);
+      height: clamp(110px, 18vw, 160px);
+      background: #050d20;
+      border: 4px solid var(--dorado);
+      border-radius: 20px;
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Bebas Neue', cursive;
+      font-size: clamp(3.5rem, 10vw, 6rem);
+      color: var(--dorado);
+      letter-spacing: 10px;
+      box-shadow: 0 0 60px rgba(245,197,24,0.4), inset 0 0 40px rgba(245,197,24,0.08);
+    }
+    .drum-outer.gran-sorteo {
+      border-color: var(--dorado);
+      box-shadow: 0 0 50px rgba(245,197,24,0.3);
+      animation: drumOuterPulse 0.6s ease-in-out infinite alternate;
+    }
+    @keyframes drumOuterPulse {
+      from { box-shadow: 0 0 30px rgba(245,197,24,0.2); }
+      to   { box-shadow: 0 0 70px rgba(245,197,24,0.6), 0 0 120px rgba(204,30,43,0.3); }
+    }
+    @keyframes screenFlash {
+      0%,100% { opacity: 1; }
+      50%      { opacity: 0.6; }
+    }
+
+    /* ── TOAST ── */
+    .toast {
+      position: fixed;
+      bottom: 28px; left: 50%;
+      transform: translateX(-50%) translateY(120px);
+      background: linear-gradient(135deg, var(--rojo), var(--rojo-dark));
+      color: var(--blanco);
+      padding: 12px 28px;
+      border-radius: 50px;
+      font-family: 'Bebas Neue', cursive;
+      font-size: 1.15rem; letter-spacing: 2px;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.4);
+      z-index: 10000;
+      transition: transform 0.4s cubic-bezier(0.34,1.56,0.64,1);
+      border-top: 2px solid var(--dorado);
+    }
+    .toast.show { transform: translateX(-50%) translateY(0); }
+
+    /* ── SPARKLE ── */
+    .sparkle {
+      position: fixed; pointer-events: none; z-index: 9998;
+      animation: sparkleAnim 0.9s ease-out forwards;
+    }
+    @keyframes sparkleAnim {
+      0%   { opacity:1; transform:scale(0) rotate(0deg); }
+      50%  { opacity:1; transform:scale(1.6) rotate(180deg); }
+      100% { opacity:0; transform:scale(0) rotate(360deg); }
+    }
+
+    /* ── FOOTER ── */
+    footer {
+      text-align: center;
+      padding: 20px;
+      font-size: 0.75rem;
+      color: rgba(255,255,255,0.25);
+      letter-spacing: 1px;
+    }
+    footer img { width: 28px; vertical-align: middle; opacity: 0.4; margin-right: 6px; }
+  </style>
+</head>
+<body>
+
+<canvas id="confetti-canvas"></canvas>
+<div class="stripes-bg"></div>
+<div class="stars" id="stars"></div>
+
+<div class="ticker-strip">
+  <div class="ticker-inner" id="ticker-inner"></div>
+</div>
+
+<div class="container" id="app">
+  <div class="loading">Cargando...</div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ═══ CONFETTI ═══ */
+const canvas = document.getElementById('confetti-canvas');
+const ctx = canvas.getContext('2d');
+let particles = [];
+function resizeCanvas(){ canvas.width = innerWidth; canvas.height = innerHeight; }
+addEventListener('resize', resizeCanvas); resizeCanvas();
+
+function launchConfetti(n, colors){
+  colors = colors || ['#f5c518','#cc1e2b','#1a4bc4','#fff','#ffd700','#c8d8ff'];
+  for(let i=0;i<n;i++){
+    particles.push({
+      x:Math.random()*canvas.width, y:-10,
+      r:Math.random()*9+3,
+      c:colors[Math.floor(Math.random()*colors.length)],
+      vx:(Math.random()-.5)*8, vy:Math.random()*5+2,
+      rot:Math.random()*360, rotV:(Math.random()-.5)*10,
+      shape:Math.random()>.5?'rect':'circle', alpha:1
+    });
+  }
+}
+(function loop(){
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  particles = particles.filter(p=>p.alpha>.01);
+  particles.forEach(p=>{
+    p.x+=p.vx; p.y+=p.vy; p.rot+=p.rotV; p.vy+=.09;
+    if(p.y>canvas.height*.72) p.alpha-=.013;
+    ctx.save(); ctx.globalAlpha=p.alpha;
+    ctx.translate(p.x,p.y); ctx.rotate(p.rot*Math.PI/180);
+    ctx.fillStyle=p.c;
+    if(p.shape==='rect') ctx.fillRect(-p.r,-p.r/2,p.r*2,p.r);
+    else{ ctx.beginPath(); ctx.arc(0,0,p.r/2,0,Math.PI*2); ctx.fill(); }
+    ctx.restore();
+  });
+  requestAnimationFrame(loop);
+})();
+
+/* ═══ STARS ═══ */
+(function(){
+  const el=document.getElementById('stars');
+  for(let i=0;i<80;i++){
+    const s=document.createElement('div'); s.className='star';
+    const sz=Math.random()*2+.5;
+    s.style.cssText=`width:${sz}px;height:${sz}px;top:${Math.random()*100}%;left:${Math.random()*100}%;animation-delay:${Math.random()*3}s;animation-duration:${2+Math.random()*3}s`;
+    el.appendChild(s);
+  }
+})();
+
+/* ═══ TOAST / SPARKLES ═══ */
+let toastTimer;
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  clearTimeout(toastTimer); toastTimer=setTimeout(()=>t.classList.remove('show'),2800);
+}
+function spawnSparkles(){
+  const emojis=['⚽','🌟','✨','💫','🎉','🏆','⭐'];
+  for(let i=0;i<9;i++){
+    setTimeout(()=>{
+      const el=document.createElement('div'); el.className='sparkle';
+      el.textContent=emojis[Math.floor(Math.random()*emojis.length)];
+      el.style.cssText=`left:${Math.random()*100}vw;top:${Math.random()*100}vh;font-size:${1+Math.random()*1.8}rem;animation-duration:${.5+Math.random()*.5}s`;
+      document.body.appendChild(el);
+      setTimeout(()=>el.remove(),1100);
+    },i*80);
+  }
+}
+
+/* ═══ TICKER ═══ */
+(function(){
+  const msgs=['⚽ CLUB 17 DE OCTUBRE','🏆 GRAN RIFA OFICIAL','🎟️ COMPRÁ TU NÚMERO','💪 APOYÁ AL CLUB','⚽ SORTEO EN VIVO','🌟 INCREÍBLES PREMIOS','🎉 ¡BUENA SUERTE!'];
+  const inner=document.getElementById('ticker-inner');
+  const full=(msgs.join(' · ')+' · ').repeat(4);
+  inner.innerHTML=full.split(' · ').map((t,i)=>
+    i%2===0?`<span class="ticker-item">${t}</span>`:`<span class="ticker-item ticker-dot">·</span>`
+  ).join('');
+})();
+
+/* ═══ STATE ═══ */
+let config=null, remainingPool=[], winners=[];
+
+/* ═══ LOAD CONFIG ═══ */
+async function loadConfig(){
+  try{
+    const res=await fetch('config.json?t='+Date.now());
+    if(!res.ok) throw new Error(`HTTP ${res.status}`);
+    config=await res.json();
+    renderApp();
+    setTimeout(()=>launchConfetti(90),700);
+  }catch(e){
+    document.getElementById('app').innerHTML=`
+      <div class="error-box">
+        ⚠️ No se pudo cargar <strong>config.json</strong><br/>
+        <small style="opacity:.7">${e.message}</small>
+      </div>`;
+  }
+}
+
+/* ═══ RENDER ═══ */
+function renderApp(){
+  const {titulo,subtitulo,totalTickets,soldTickets,ticketPrice,premios}=config;
+  const sold=Math.min(soldTickets,totalTickets);
+  const avail=totalTickets-sold;
+  const recaud=sold*ticketPrice;
+  const recaudStr=recaud>=1000000?`$${(recaud/1000000).toFixed(1)}M`:recaud>=1000?`$${(recaud/1000).toFixed(0)}K`:`$${recaud}`;
+  const pct=totalTickets>0?(sold/totalTickets)*100:0;
+
+  const premiosHTML=premios.map((p,i)=>`
+    <div class="premio-card" style="animation-delay:${i*.1}s">
+      <div class="premio-emoji">${p.emoji||'🎁'}</div>
+      <div class="premio-info">
+        <div class="premio-nombre">${p.nombre}</div>
+        <div class="premio-cant">${p.cantidad>1?`${p.cantidad} ganadores`:'1 ganador'}</div>
+      </div>
+      <div class="premio-num">#${i+1}</div>
+    </div>
+  `).join('');
+
+  document.getElementById('app').innerHTML=`
+    <header>
+      <div class="club-tag">Club Atlético</div>
+      <div class="escudo-wrap"><img src="logo17.png" alt="Club 17 de Octubre" /></div>
+      <div class="titulo-main"><span>Gran Rifa</span><br>${titulo}</div>
+      <div class="subtitulo">${subtitulo}</div>
+    </header>
+
+    <div class="divider"><div class="divider-line"></div><div class="divider-icon">⚽</div><div class="divider-line"></div></div>
+    <div class="section-title"><span>🏆</span> Premios en juego</div>
+    <div id="premios-list">${premiosHTML}</div>
+
+    <div class="divider"><div class="divider-line"></div><div class="divider-icon">🎟️</div><div class="divider-line"></div></div>
+
+    <div class="drum-outer">
+      <div class="drum-club">Club 17 de Octubre</div>
+      <div class="drum-title">SORTEO EN VIVO</div>
+      <div class="drum-prize-label" id="drumPrizeLabel">—</div>
+      <div class="drum-display"><span id="drumNumber">???</span></div>
+      <button class="btn-sortear" id="btnSortear" onclick="doSorteo()">⚽ SORTEAR ⚽</button>
+      <div class="sorteo-status" id="sorteoStatus">Presioná SORTEAR para comenzar</div>
+    </div>
+
+    <div id="winnersSection" style="display:none">
+      <div class="section-title"><span>🏅</span> Ganadores</div>
+      <div id="winnersList"></div>
+    </div>
+
+    <div style="text-align:center;margin-bottom:40px">
+      <button class="btn-reset" onclick="resetSorteo()">↺ Reiniciar sorteo</button>
+    </div>
+
+    <footer>
+      <img src="logo17.png" alt=""> Club 17 de Octubre &nbsp;·&nbsp; Sorteo oficial
+    </footer>
+  `;
+
+  resetSorteo(true);
+}
+
+/* ═══ SORTEO ═══ */
+function buildPool(){
+  const sold=Math.min(config.soldTickets,config.totalTickets);
+  const arr=[]; for(let i=1;i<=sold;i++) arr.push(String(i).padStart(3,'0'));
+  for(let i=arr.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [arr[i],arr[j]]=[arr[j],arr[i]]; }
+  return arr;
+}
+function totalPremios(){ return config.premios.reduce((s,p)=>s+(parseInt(p.cantidad)||1),0); }
+function getPrize(idx){
+  // sortear del último premio al primero
+  const reversed=[...config.premios].reverse();
+  let acc=0;
+  for(const p of reversed){ acc+=parseInt(p.cantidad)||1; if(idx<acc) return p; }
+  return reversed[reversed.length-1];
+}
+
+function doSorteo(){
+  if(!config) return;
+  if(remainingPool.length===0 && winners.length===0) remainingPool=buildPool();
+  if(remainingPool.length===0){ showToast('¡No quedan números disponibles!'); return; }
+  const total=totalPremios();
+  if(winners.length>=total){ showToast('🎊 ¡Todos los premios fueron sorteados!'); return; }
+
+  const isLast = (winners.length === total - 1);
+  const prize  = getPrize(winners.length);
+
+  document.getElementById('drumPrizeLabel').textContent='Sorteando: '+prize.nombre;
+  document.getElementById('btnSortear').disabled=true;
+
+  if(isLast) sorteoGranPremio(prize, total);
+  else        sorteeoNormal(prize, total);
+}
+
+/* sorteo normal ─ rápido */
+function sorteeoNormal(prize, total){
+  const drumEl = document.getElementById('drumNumber');
+  const sold   = Math.min(config.soldTickets, config.totalTickets);
+  drumEl.classList.add('drum-rolling');
+  let ticks = 0;
+  const iv = setInterval(()=>{
+    drumEl.textContent = String(Math.floor(Math.random()*sold)+1).padStart(3,'0');
+    if(++ticks > 34){
+      clearInterval(iv);
+      drumEl.classList.remove('drum-rolling');
+      revealWinner(prize, total);
+    }
+  }, 65);
+}
+
+/* sorteo gran premio ─ dramático con desaceleración */
+function sorteoGranPremio(prize, total){
+  const sold = Math.min(config.soldTickets, config.totalTickets);
+
+  // Overlay dramático
+  const overlay = document.createElement('div');
+  overlay.className = 'gran-premio-overlay';
+  overlay.id = 'granPremioOverlay';
+  overlay.innerHTML = `
+    <div class="gran-premio-badge">⚽ 1° PREMIO ⚽</div>
+    <div class="gran-premio-sub">${prize.nombre}</div>
+    <div class="gran-premio-drum" id="granPremoDrum">???</div>
+  `;
+  document.body.appendChild(overlay);
+
+  // fondo parpadea
+  document.querySelector('.drum-outer').classList.add('gran-sorteo');
+
+  const drumEl   = document.getElementById('granPremoDrum');
+  const number   = remainingPool.pop(); // sacar el número ya
+
+  // Secuencia con desaceleración progresiva
+  // Fase 1: rápido (50ms × 30 ticks)
+  // Fase 2: medio (120ms × 20 ticks)
+  // Fase 3: lento (300ms × 8 ticks)
+  // Fase 4: muy lento (600ms × 4 ticks) mostrando número real al final
+
+  const phases = [
+    { delay: 50,  ticks: 30, useReal: false },
+    { delay: 120, ticks: 20, useReal: false },
+    { delay: 300, ticks: 8,  useReal: false },
+    { delay: 600, ticks: 4,  useReal: true  }, // los últimos 4 intercalan el número real
+  ];
+
+  let phaseIdx = 0, tickInPhase = 0, totalTicks = 0;
+  const allTicks = phases.reduce((s,p)=>s+p.ticks,0);
+
+  function nextTick(){
+    const phase = phases[phaseIdx];
+    const isLastPhase  = phaseIdx === phases.length - 1;
+    const isLastTick   = isLastPhase && tickInPhase === phase.ticks - 1;
+
+    if(isLastTick){
+      // revelar número real definitivo
+      drumEl.textContent = number;
+      setTimeout(()=>{
+        // cerrar overlay con fade
+        overlay.style.transition = 'opacity 0.6s';
+        overlay.style.opacity = '0';
+        setTimeout(()=>{
+          overlay.remove();
+          document.querySelector('.drum-outer').classList.remove('gran-sorteo');
+          // actualizar drum principal también
+          document.getElementById('drumNumber').textContent = number;
+          winners.push({number, prize:prize.nombre, emoji:prize.emoji||'🎁', pos:winners.length+1});
+          renderWinner(winners[winners.length-1]);
+          document.getElementById('sorteoStatus').textContent = '🎉 ¡Todos los premios han sido sorteados!';
+          launchConfetti(300, ['#f5c518','#cc1e2b','#1a4bc4','#fff','#ffd700','#ff6b35']);
+          spawnSparkles(); spawnSparkles(); spawnSparkles();
+          showToast('🏆 ¡GRAN GANADOR! ¡Felicitaciones!');
+        }, 700);
+      }, 1800); // pausa dramática mostrando el número
+      return;
+    }
+
+    // mostrar número aleatorio (en fase final, alternar con número real para suspenso)
+    if(phase.useReal && tickInPhase % 2 === 0){
+      drumEl.textContent = number;
+    } else {
+      drumEl.textContent = String(Math.floor(Math.random()*sold)+1).padStart(3,'0');
+    }
+
+    tickInPhase++;
+    if(tickInPhase >= phase.ticks){
+      phaseIdx++;
+      tickInPhase = 0;
+    }
+
+    setTimeout(nextTick, phases[phaseIdx]?.delay ?? phase.delay);
+  }
+
+  nextTick();
+}
+
+function revealWinner(prize, total){
+  const number = remainingPool.pop();
+  document.getElementById('drumNumber').textContent = number;
+  const pos = winners.length + 1;
+  winners.push({number, prize:prize.nombre, emoji:prize.emoji||'🎁', pos});
+  renderWinner(winners[winners.length-1]);
+  const left = total - winners.length;
+  document.getElementById('sorteoStatus').textContent =
+    left > 0 ? `${winners.length} de ${total} premios sorteados — quedan ${left}`
+             : '🎉 ¡Todos los premios han sido sorteados!';
+  launchConfetti(80, ['#f5c518','#cc1e2b','#1a4bc4','#fff','#ffd700']);
+  spawnSparkles();
+  document.getElementById('btnSortear').disabled = false;
+}
+
+function renderWinner(w){
+  document.getElementById('winnersSection').style.display='block';
+  let pc='pos-n';
+  if(w.pos===1) pc='pos-1'; else if(w.pos===2) pc='pos-2'; else if(w.pos===3) pc='pos-3';
+  const card=document.createElement('div'); card.className='winner-card';
+  card.innerHTML=`
+    <div class="winner-pos ${pc}">${w.pos}°</div>
+    <div class="winner-info">
+      <div class="winner-prize">${w.prize}</div>
+      <div class="winner-number">N° ${w.number}</div>
+    </div>
+    <div class="winner-icon">${w.emoji}</div>
+  `;
+  document.getElementById('winnersList').insertBefore(card,document.getElementById('winnersList').firstChild);
+}
+
+function resetSorteo(silent=false){
+  remainingPool=[]; winners=[];
+  ['drumNumber','drumPrizeLabel','sorteoStatus','winnersList'].forEach(id=>{
+    const el=document.getElementById(id); if(!el) return;
+    if(id==='drumNumber') el.textContent='???';
+    else if(id==='drumPrizeLabel') el.textContent='—';
+    else if(id==='sorteoStatus') el.textContent='Presioná SORTEAR para comenzar';
+    else el.innerHTML='';
+  });
+  const ws=document.getElementById('winnersSection'); if(ws) ws.style.display='none';
+  const btn=document.getElementById('btnSortear'); if(btn) btn.disabled=false;
+  if(!silent) showToast('↺ Sorteo reiniciado');
+}
+
+loadConfig();
+</script>
+</body>
+</html>
