@@ -85,21 +85,25 @@ tr:hover td{background:rgba(255,255,255,.04);}
 /* ── premio / precio rows ── */
 .lista-items{display:flex;flex-direction:column;gap:10px;margin-bottom:14px;}
 .item-row{
-  display:flex;align-items:center;gap:8px;
+  display:flex;align-items:flex-end;gap:8px;flex-wrap:wrap;
   background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);
   border-radius:12px;padding:12px 14px;
 }
+.field-group{display:flex;flex-direction:column;gap:3px;}
+.field-group.fg-sm{flex:0 0 70px;}
+.field-group.fg-md{flex:0 0 110px;}
+.field-group.fg-label{flex:1;min-width:120px;}
+.field-group.fg-emoji{flex:0 0 52px;}
 .item-row input{
   padding:7px 10px;border-radius:8px;
   border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.07);
-  color:#fff;font-family:'Nunito',sans-serif;font-size:.9rem;outline:none;flex:1;min-width:0;
+  color:#fff;font-family:'Nunito',sans-serif;font-size:.9rem;outline:none;width:100%;min-width:0;box-sizing:border-box;
   transition:border-color .2s;
 }
 .item-row input:focus{border-color:var(--dorado);}
-.item-row input.w-sm{flex:0 0 70px;}
-.item-row input.w-md{flex:0 0 110px;}
-.item-row input.w-emoji{flex:0 0 52px;text-align:center;font-size:1.1rem;}
+.item-row input.w-emoji{text-align:center;font-size:1.1rem;}
 .item-row-label{font-size:.7rem;color:rgba(255,255,255,.35);white-space:nowrap;}
+.item-row-remove{align-self:flex-end;margin-bottom:1px;}
 .btn-remove-item{
   background:rgba(204,30,43,.2);border:1px solid rgba(204,30,43,.4);color:var(--rojo);
   border-radius:8px;padding:6px 10px;cursor:pointer;font-size:.9rem;flex-shrink:0;
@@ -505,16 +509,24 @@ tr:hover td{background:rgba(255,255,255,.04);}
       <div class="lista-items" id="precios-lista">
         {% for p in config.venta.precios %}
         <div class="item-row">
-          <div class="item-row-label">Cant.</div>
-          <input class="w-sm" type="number" min="1" value="{{ p.cantidad }}" placeholder="1"/>
-          <div class="item-row-label">Precio $</div>
-          <input class="w-md" type="number" min="0" value="{{ p.precio }}" placeholder="5000"/>
-          <div class="item-row-label">Label</div>
-          <input type="text" placeholder="Ej: 3 x $12.000" value="{{ p.label or '' }}"/>
-          <label style="display:flex;align-items:center;gap:4px;white-space:nowrap;color:rgba(255,255,255,.6);font-size:.82rem;cursor:pointer">
+          <div class="field-group fg-sm">
+            <div class="item-row-label">Cant.</div>
+            <input type="number" min="1" value="{{ p.cantidad }}" placeholder="1"/>
+          </div>
+          <div class="field-group fg-md">
+            <div class="item-row-label">Precio $</div>
+            <input type="number" min="0" value="{{ p.precio }}" placeholder="5000"/>
+          </div>
+          <div class="field-group fg-label">
+            <div class="item-row-label">Label</div>
+            <input type="text" placeholder="Ej: 3 x $12.000" value="{{ p.label or '' }}"/>
+          </div>
+          <label style="display:flex;align-items:center;gap:4px;white-space:nowrap;color:rgba(255,255,255,.6);font-size:.82rem;cursor:pointer;padding-bottom:2px">
             <input type="checkbox" {{ 'checked' if p.promo else '' }} style="width:auto;flex:none"/> Promo
           </label>
-          <button class="btn-remove-item" onclick="this.closest('.item-row').remove()">✕</button>
+          <div class="item-row-remove">
+            <button class="btn-remove-item" onclick="this.closest('.item-row').remove()">✕</button>
+          </div>
         </div>
         {% endfor %}
       </div>
@@ -715,16 +727,25 @@ async function saveVentaConfig(){
 /* ── precios ── */
 function addPrecio(){
   const row=document.createElement('div');row.className='item-row';
-  row.innerHTML=`<div class="item-row-label">Cant.</div>
-    <input class="w-sm" type="number" min="1" value="1"/>
-    <div class="item-row-label">Precio $</div>
-    <input class="w-md" type="number" min="0" value="5000"/>
-    <div class="item-row-label">Label</div>
-    <input type="text" placeholder="Ej: 3 x $12.000"/>
-    <label style="display:flex;align-items:center;gap:4px;white-space:nowrap;color:rgba(255,255,255,.6);font-size:.82rem;cursor:pointer">
+  row.innerHTML=`
+    <div class="field-group fg-sm">
+      <div class="item-row-label">Cant.</div>
+      <input type="number" min="1" value="1"/>
+    </div>
+    <div class="field-group fg-md">
+      <div class="item-row-label">Precio $</div>
+      <input type="number" min="0" value="5000"/>
+    </div>
+    <div class="field-group fg-label">
+      <div class="item-row-label">Label</div>
+      <input type="text" placeholder="Ej: 3 x $12.000"/>
+    </div>
+    <label style="display:flex;align-items:center;gap:4px;white-space:nowrap;color:rgba(255,255,255,.6);font-size:.82rem;cursor:pointer;padding-bottom:2px">
       <input type="checkbox" style="width:auto;flex:none"/> Promo
     </label>
-    <button class="btn-remove-item" onclick="this.closest('.item-row').remove()">✕</button>`;
+    <div class="item-row-remove">
+      <button class="btn-remove-item" onclick="this.closest('.item-row').remove()">✕</button>
+    </div>`;
   document.getElementById('precios-lista').appendChild(row);
 }
 async function savePrecios(){
