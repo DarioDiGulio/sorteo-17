@@ -276,7 +276,8 @@ def admin():
     compradores = sorted(compradores.values(), key=lambda x: x['fecha'], reverse=True)
 
     vendidos    = len(rows)
-    precio_unit = venta.get('precios', [{'precio': 0}])[0]['precio']
+    precios = venta.get('precios', [])
+    precio_unit = precios[0]['precio'] if precios else 0
 
     return render_template('admin.html',
         config=cfg,
