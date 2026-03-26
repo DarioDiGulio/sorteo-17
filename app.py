@@ -35,8 +35,27 @@ def get_db():
         conn.close()
 
 
+DEFAULT_CONFIG = {
+    'titulo':        'Sorteo Club 17 de Octubre',
+    'subtitulo':     '¡Participá y ganá!',
+    'sorteoPublico': True,
+    'premios':       [],
+    'resultados':    None,
+    'venta': {
+        'bloqueInicial': 200,
+        'incremento':    50,
+        'precios': [
+            {'cantidad': 1, 'precio': 1000, 'label': None, 'promo': False},
+        ],
+    },
+    'admin': {
+        'password': '17octubre',
+    },
+}
+
+
 def init_db():
-    """Crea tablas. Reintenta hasta que Postgres esté listo."""
+    """Crea tablas e inserta config por defecto si no existe. Reintenta hasta que Postgres esté listo."""
     for attempt in range(15):
         try:
             with get_db() as c:
@@ -55,6 +74,13 @@ def init_db():
                         valor TEXT NOT NULL
                     )
                 ''')
+                c.execute("SELECT 1 FROM meta WHERE clave='config'")
+                if not c.fetchone():
+                    c.execute(
+                        """INSERT INTO meta (clave, valor) VALUES ('config', %s)
+                           ON CONFLICT (clave) DO NOTHING""",
+                        (json.dumps(DEFAULT_CONFIG, ensure_ascii=False),)
+                    )
             return
         except psycopg2.OperationalError:
             if attempt < 14:
