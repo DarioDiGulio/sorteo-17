@@ -1,0 +1,793 @@
+{% extends "base.html" %}
+{% block title %}Backoffice – Club 17 de Octubre{% endblock %}
+
+{% block extra_css %}
+/* ── layout ── */
+.admin-wrap{position:relative;z-index:1;max-width:1000px;margin:0 auto;padding:0 20px 80px;}
+.admin-header{display:flex;align-items:center;gap:16px;padding:28px 0 20px;flex-wrap:wrap;}
+.admin-logo{width:52px;filter:drop-shadow(0 0 8px rgba(245,197,24,.4));}
+.admin-header-text h1{font-family:'Bebas Neue',cursive;font-size:2rem;letter-spacing:4px;color:var(--dorado);line-height:1;}
+.admin-header-text p{font-size:.8rem;color:rgba(255,255,255,.45);letter-spacing:2px;text-transform:uppercase;}
+.admin-header-actions{margin-left:auto;display:flex;gap:10px;flex-wrap:wrap;}
+
+/* ── tabs ── */
+.tabs{display:flex;gap:4px;background:rgba(255,255,255,.05);border-radius:14px;padding:4px;margin-bottom:24px;flex-wrap:wrap;}
+.tab{
+  padding:9px 20px;border-radius:10px;border:none;background:transparent;
+  color:rgba(255,255,255,.5);font-family:'Bebas Neue',cursive;font-size:1rem;letter-spacing:2px;
+  cursor:pointer;transition:all .2s;white-space:nowrap;
+}
+.tab.active{background:var(--azul);color:#fff;box-shadow:0 4px 12px rgba(26,75,196,.4);}
+.tab:hover:not(.active){color:#fff;background:rgba(255,255,255,.08);}
+.tab-panel{display:none;animation:fadeUp .3s ease-out;}
+.tab-panel.active{display:block;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── stat cards ── */
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:14px;margin-bottom:24px;}
+.stat-card{
+  background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);
+  border-radius:16px;padding:18px 20px;text-align:center;
+  transition:transform .2s;
+}
+.stat-card:hover{transform:translateY(-3px);}
+.stat-card.gold{border-color:rgba(245,197,24,.4);background:rgba(245,197,24,.07);}
+.stat-card.red{border-color:rgba(204,30,43,.35);background:rgba(204,30,43,.07);}
+.stat-card.blue{border-color:rgba(26,75,196,.5);background:rgba(26,75,196,.1);}
+.stat-num{font-family:'Bebas Neue',cursive;font-size:2.4rem;letter-spacing:2px;color:var(--dorado);display:block;}
+.stat-lbl{font-size:.72rem;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:1.5px;}
+
+/* ── progress ── */
+.prog-wrap{background:rgba(255,255,255,.1);border-radius:50px;height:12px;overflow:hidden;margin-bottom:6px;}
+.prog-bar{height:100%;border-radius:50px;background:linear-gradient(90deg,var(--azul),var(--dorado),var(--rojo));background-size:200%;animation:progShift 3s linear infinite;transition:width .6s;}
+@keyframes progShift{0%{background-position:0%}100%{background-position:200%}}
+.prog-info{display:flex;justify-content:space-between;font-size:.78rem;color:rgba(255,255,255,.45);}
+
+/* ── compradores table ── */
+.table-wrap{overflow-x:auto;border-radius:14px;border:1px solid rgba(255,255,255,.1);}
+table{width:100%;border-collapse:collapse;}
+thead{background:rgba(26,75,196,.3);}
+th{padding:12px 16px;text-align:left;font-family:'Bebas Neue',cursive;font-size:.95rem;letter-spacing:2px;color:var(--dorado);border-bottom:1px solid rgba(255,255,255,.1);}
+td{padding:11px 16px;font-size:.9rem;border-bottom:1px solid rgba(255,255,255,.06);vertical-align:middle;}
+tr:last-child td{border-bottom:none;}
+tr:hover td{background:rgba(255,255,255,.04);}
+.num-chips{display:flex;flex-wrap:wrap;gap:4px;}
+.num-chip{
+  background:rgba(26,75,196,.4);border:1px solid rgba(26,75,196,.6);color:#fff;
+  border-radius:6px;font-family:'Bebas Neue',cursive;font-size:.85rem;
+  padding:1px 8px;display:inline-flex;align-items:center;gap:4px;
+}
+.num-chip .chip-del{
+  background:none;border:none;color:rgba(255,100,100,.7);cursor:pointer;
+  font-size:.8rem;padding:0 1px;line-height:1;transition:color .15s;
+}
+.num-chip .chip-del:hover{color:#ff4444;}
+.num-chip.liberado{opacity:.35;text-decoration:line-through;pointer-events:none;}
+.empty-row{text-align:center;padding:40px;color:rgba(255,255,255,.3);font-size:.9rem;}
+
+/* ── form elements ── */
+.form-section{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:16px;padding:24px;margin-bottom:20px;}
+.form-section-title{font-family:'Bebas Neue',cursive;font-size:1.2rem;letter-spacing:3px;color:var(--dorado);margin-bottom:18px;display:flex;align-items:center;gap:8px;}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;}
+@media(max-width:600px){.form-row{grid-template-columns:1fr;}}
+.form-group{display:flex;flex-direction:column;gap:5px;}
+.form-group label{font-size:.75rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,.55);}
+.form-group input,.form-group select,.form-group textarea{
+  padding:10px 13px;border-radius:10px;
+  border:2px solid rgba(255,255,255,.12);background:rgba(255,255,255,.07);
+  color:#fff;font-family:'Nunito',sans-serif;font-size:.95rem;outline:none;
+  transition:border-color .2s;
+}
+.form-group input:focus,.form-group select:focus,.form-group textarea:focus{border-color:var(--dorado);background:rgba(245,197,24,.06);}
+.form-group select option{background:#0d1e4a;color:#fff;}
+.form-group textarea{resize:vertical;min-height:60px;}
+
+/* ── premio / precio rows ── */
+.lista-items{display:flex;flex-direction:column;gap:10px;margin-bottom:14px;}
+.item-row{
+  display:flex;align-items:center;gap:8px;
+  background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);
+  border-radius:12px;padding:12px 14px;
+}
+.item-row input{
+  padding:7px 10px;border-radius:8px;
+  border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.07);
+  color:#fff;font-family:'Nunito',sans-serif;font-size:.9rem;outline:none;flex:1;min-width:0;
+  transition:border-color .2s;
+}
+.item-row input:focus{border-color:var(--dorado);}
+.item-row input.w-sm{flex:0 0 70px;}
+.item-row input.w-md{flex:0 0 110px;}
+.item-row input.w-emoji{flex:0 0 52px;text-align:center;font-size:1.1rem;}
+.item-row-label{font-size:.7rem;color:rgba(255,255,255,.35);white-space:nowrap;}
+.btn-remove-item{
+  background:rgba(204,30,43,.2);border:1px solid rgba(204,30,43,.4);color:var(--rojo);
+  border-radius:8px;padding:6px 10px;cursor:pointer;font-size:.9rem;flex-shrink:0;
+  transition:background .2s;
+}
+.btn-remove-item:hover{background:rgba(204,30,43,.4);}
+.btn-add-item{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:8px 18px;border-radius:50px;border:1px dashed rgba(255,255,255,.3);
+  background:transparent;color:rgba(255,255,255,.6);
+  font-family:'Bebas Neue',cursive;font-size:.95rem;letter-spacing:1px;cursor:pointer;
+  transition:border-color .2s,color .2s;
+}
+.btn-add-item:hover{border-color:var(--dorado);color:var(--dorado);}
+
+/* ── resultados ── */
+.modo-toggle{display:flex;gap:10px;margin-bottom:16px;}
+.modo-btn{
+  flex:1;padding:10px;border-radius:10px;border:2px solid rgba(255,255,255,.15);
+  background:transparent;color:rgba(255,255,255,.5);
+  font-family:'Bebas Neue',cursive;font-size:1rem;letter-spacing:2px;cursor:pointer;transition:all .2s;
+}
+.modo-btn.active{background:var(--azul);border-color:var(--azul);color:#fff;}
+
+/* ── buttons ── */
+.btn-save{
+  padding:11px 32px;border-radius:50px;border:none;
+  background:linear-gradient(135deg,var(--rojo),var(--rojo-dark));
+  color:#fff;font-family:'Bebas Neue',cursive;font-size:1.1rem;letter-spacing:2px;
+  cursor:pointer;box-shadow:0 4px 16px rgba(204,30,43,.4);transition:transform .15s;
+}
+.btn-save:hover{transform:scale(1.03);}
+.btn-outline{
+  padding:10px 24px;border-radius:50px;border:2px solid rgba(255,255,255,.2);
+  background:transparent;color:rgba(255,255,255,.6);
+  font-family:'Bebas Neue',cursive;font-size:1rem;letter-spacing:2px;cursor:pointer;
+  transition:all .2s;
+}
+.btn-outline:hover{border-color:rgba(255,255,255,.5);color:#fff;}
+.btn-danger{
+  padding:10px 24px;border-radius:50px;border:2px solid rgba(204,30,43,.4);
+  background:transparent;color:var(--rojo);
+  font-family:'Bebas Neue',cursive;font-size:1rem;letter-spacing:2px;cursor:pointer;
+  transition:all .2s;
+}
+.btn-danger:hover{background:rgba(204,30,43,.2);}
+.btn-row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:6px;}
+
+/* ── danger zone ── */
+.danger-zone{
+  border:2px solid rgba(204,30,43,.3);border-radius:16px;padding:24px;
+  background:rgba(204,30,43,.05);
+}
+.danger-zone-title{font-family:'Bebas Neue',cursive;font-size:1.2rem;letter-spacing:3px;color:var(--rojo);margin-bottom:16px;}
+.danger-item{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;padding:14px 0;border-bottom:1px solid rgba(204,30,43,.15);}
+.danger-item:last-child{border-bottom:none;padding-bottom:0;}
+.danger-desc p{font-weight:700;font-size:.95rem;color:rgba(255,255,255,.8);}
+.danger-desc small{font-size:.8rem;color:rgba(255,255,255,.4);}
+
+/* ── link nav ── */
+.nav-links{display:flex;gap:10px;flex-wrap:wrap;}
+.nav-link{
+  display:inline-flex;align-items:center;gap:6px;padding:9px 20px;
+  border-radius:50px;text-decoration:none;font-family:'Bebas Neue',cursive;
+  font-size:.95rem;letter-spacing:2px;border:1px solid rgba(255,255,255,.2);
+  color:rgba(255,255,255,.6);transition:all .2s;
+}
+.nav-link:hover{border-color:rgba(255,255,255,.5);color:#fff;}
+.btn-logout{
+  display:inline-flex;align-items:center;gap:6px;padding:9px 20px;
+  border-radius:50px;border:1px solid rgba(204,30,43,.4);
+  background:transparent;color:rgba(204,30,43,.8);
+  font-family:'Bebas Neue',cursive;font-size:.95rem;letter-spacing:2px;cursor:pointer;
+  text-decoration:none;transition:all .2s;
+}
+.btn-logout:hover{background:rgba(204,30,43,.15);color:var(--rojo);}
+
+/* ── toggle switch ── */
+.toggle-track{
+  width:46px;height:26px;border-radius:50px;
+  background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);
+  position:relative;cursor:pointer;transition:background .25s,border-color .25s;flex-shrink:0;
+}
+#s-publico:checked + .toggle-track,
+.toggle-track.on{background:var(--azul);border-color:var(--azul);}
+.toggle-thumb{
+  width:20px;height:20px;border-radius:50%;background:#fff;
+  position:absolute;top:2px;left:2px;
+  transition:transform .25s cubic-bezier(.34,1.56,.64,1);
+  box-shadow:0 2px 6px rgba(0,0,0,.3);
+}
+#s-publico:checked ~ .toggle-track .toggle-thumb,
+.toggle-track.on .toggle-thumb{transform:translateX(20px);}
+
+/* ── save feedback ── */
+.save-ok{color:#6ee7b7;font-size:.85rem;font-weight:700;display:none;}
+
+/* ── confirm modal ── */
+.confirm-overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,.78);
+  display:flex;align-items:center;justify-content:center;
+  z-index:9000;backdrop-filter:blur(5px);
+  animation:overlayIn .2s ease-out;
+}
+.confirm-overlay.hidden{display:none;}
+@keyframes overlayIn{from{opacity:0}to{opacity:1}}
+.confirm-card{
+  background:linear-gradient(160deg,#0d1e4a,#081530);
+  border:2px solid rgba(245,197,24,.35);border-radius:22px;
+  padding:36px 32px 28px;width:100%;max-width:380px;margin:16px;
+  text-align:center;
+  animation:confirmPop .3s cubic-bezier(.34,1.56,.64,1);
+  position:relative;overflow:hidden;
+}
+.confirm-card::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:4px;
+  background:linear-gradient(90deg,var(--rojo),var(--dorado),var(--rojo));
+  background-size:200%;animation:progShift 2s linear infinite;
+}
+.confirm-icon{font-size:2.8rem;margin-bottom:10px;display:block;}
+.confirm-title{
+  font-family:'Bebas Neue',cursive;font-size:1.5rem;letter-spacing:4px;
+  color:var(--blanco);margin-bottom:10px;
+}
+.confirm-msg{
+  font-size:.92rem;color:rgba(255,255,255,.6);
+  line-height:1.5;margin-bottom:26px;
+}
+.confirm-btns{display:flex;gap:10px;}
+.confirm-cancel{
+  flex:1;padding:11px;border-radius:50px;
+  border:2px solid rgba(255,255,255,.18);background:transparent;
+  color:rgba(255,255,255,.55);font-family:'Bebas Neue',cursive;
+  font-size:1.05rem;letter-spacing:2px;cursor:pointer;transition:all .2s;
+}
+.confirm-cancel:hover{border-color:rgba(255,255,255,.45);color:#fff;}
+.confirm-ok{
+  flex:1.4;padding:11px;border-radius:50px;border:none;
+  background:linear-gradient(135deg,var(--rojo),var(--rojo-dark));
+  color:#fff;font-family:'Bebas Neue',cursive;
+  font-size:1.1rem;letter-spacing:2px;cursor:pointer;
+  box-shadow:0 4px 16px rgba(204,30,43,.45);transition:transform .15s;
+}
+.confirm-ok:hover{transform:scale(1.04);}
+.confirm-ok.is-danger{background:linear-gradient(135deg,#8b0000,#5c0000);}
+@keyframes confirmPop{from{transform:scale(.6) translateY(20px);opacity:0}to{transform:scale(1) translateY(0);opacity:1}}
+{% endblock %}
+
+{% block body %}
+<div class="admin-wrap">
+
+  <div class="admin-header">
+    <img src="/logo17.png" class="admin-logo" alt="">
+    <div class="admin-header-text">
+      <h1>BACKOFFICE</h1>
+      <p>Club 17 de Octubre · Sorteo</p>
+    </div>
+    <div class="admin-header-actions">
+      <div class="nav-links">
+        <a href="/" class="nav-link">⚽ Sorteo</a>
+        <a href="/numeros" class="nav-link">🎟️ Números</a>
+      </div>
+      <a href="/admin/logout" class="btn-logout">↩ Salir</a>
+    </div>
+  </div>
+
+  {# ── tabs ── #}
+  <div class="tabs">
+    <button class="tab active" onclick="showTab('resumen',this)">📊 Resumen</button>
+    <button class="tab" onclick="showTab('compradores',this)">👥 Compradores</button>
+    <button class="tab" onclick="showTab('sorteo',this)">🏆 Sorteo</button>
+    <button class="tab" onclick="showTab('venta',this)">💰 Venta</button>
+    <button class="tab" onclick="showTab('danger',this)" style="color:rgba(204,30,43,.7)">⚠️ Avanzado</button>
+  </div>
+
+  {# ═══════ TAB RESUMEN ═══════ #}
+  <div class="tab-panel active" id="tab-resumen">
+
+    <div class="stats-grid">
+      <div class="stat-card gold">
+        <span class="stat-num">{{ stats.vendidos }}</span>
+        <span class="stat-lbl">Números vendidos</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-num">{{ stats.disponibles }}</span>
+        <span class="stat-lbl">Disponibles</span>
+      </div>
+      <div class="stat-card blue">
+        <span class="stat-num">{{ stats.compradores }}</span>
+        <span class="stat-lbl">Compradores</span>
+      </div>
+      <div class="stat-card gold">
+        <span class="stat-num">${{ "{:,.0f}".format(stats.recaudado).replace(",",".") }}</span>
+        <span class="stat-lbl">Recaudado</span>
+      </div>
+    </div>
+
+    {# progress #}
+    {% set pct = (stats.vendidos / maxn * 100) if maxn > 0 else 0 %}
+    <div class="form-section">
+      <div class="form-section-title">🎟️ Progreso de ventas</div>
+      <div class="prog-wrap"><div class="prog-bar" style="width:{{ pct | round(1) }}%"></div></div>
+      <div class="prog-info">
+        <span>{{ stats.vendidos }} vendidos de {{ maxn }} disponibles</span>
+        <span>{{ pct | round(1) }}%</span>
+      </div>
+      <div style="margin-top:12px;font-size:.82rem;color:rgba(255,255,255,.4);">
+        Bloque actual: 1–{{ maxn }} · Siguiente expansión al vender el número {{ maxn }}
+      </div>
+    </div>
+
+    {# últimos compradores #}
+    {% if compradores %}
+    <div class="form-section">
+      <div class="form-section-title">🕐 Últimas compras</div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr>
+            <th>Comprador</th><th>Números</th><th>Fecha</th>
+          </tr></thead>
+          <tbody>
+            {% for c in compradores[:8] %}
+            <tr>
+              <td>
+                <div style="font-weight:700">{{ c.nombre }} {{ c.apellido }}</div>
+                <div style="font-size:.8rem;color:rgba(255,255,255,.45)">{{ c.email }}</div>
+              </td>
+              <td>
+                <div class="num-chips">
+                  {% for n in c.numeros | sort %}<span class="num-chip">{{ n }}</span>{% endfor %}
+                </div>
+              </td>
+              <td style="color:rgba(255,255,255,.5);font-size:.82rem;white-space:nowrap">
+                {{ c.fecha[:16].replace('T',' ') }}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    {% endif %}
+
+  </div>
+
+  {# ═══════ TAB COMPRADORES ═══════ #}
+  <div class="tab-panel" id="tab-compradores">
+    <div class="form-section">
+      <div class="form-section-title" style="justify-content:space-between">
+        <span>👥 Lista de compradores</span>
+        <span style="font-size:.85rem;color:rgba(255,255,255,.4);font-family:'Nunito'">{{ compradores|length }} compradores · {{ stats.vendidos }} números</span>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr>
+            <th>Comprador</th><th>Email</th><th>Números</th><th>Fecha</th><th></th>
+          </tr></thead>
+          <tbody id="compradores-tbody">
+            {% if not compradores %}
+            <tr><td colspan="5" class="empty-row">Aún no hay compradores</td></tr>
+            {% endif %}
+            {% for c in compradores %}
+            <tr id="row-{{ loop.index }}" data-nombre="{{ c.nombre }}" data-apellido="{{ c.apellido }}" data-email="{{ c.email }}">
+              <td style="font-weight:700">
+                {{ c.nombre }} {{ c.apellido }}
+                <div style="font-size:.75rem;color:rgba(255,255,255,.35);margin-top:2px">{{ c.numeros|length }} número{{ 's' if c.numeros|length != 1 else '' }}</div>
+              </td>
+              <td style="color:rgba(255,255,255,.6);font-size:.85rem">{{ c.email }}</td>
+              <td>
+                <div class="num-chips" id="chips-{{ loop.index }}">
+                  {% for n in c.numeros | sort %}
+                  <span class="num-chip" id="chip-{{ n }}">
+                    {{ n }}
+                    <button class="chip-del" title="Liberar número {{ n }}" onclick="liberarNumero({{ n }}, this)">✕</button>
+                  </span>
+                  {% endfor %}
+                </div>
+              </td>
+              <td style="color:rgba(255,255,255,.45);font-size:.8rem;white-space:nowrap">{{ c.fecha[:16].replace('T',' ') }}</td>
+              <td>
+                <button class="btn-remove-item" title="Liberar todos" onclick="deleteComprador('{{ c.nombre }}','{{ c.apellido }}','{{ c.email }}', this)">✕ Todo</button>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  {# ═══════ TAB SORTEO ═══════ #}
+  <div class="tab-panel" id="tab-sorteo">
+
+    {# info general #}
+    <div class="form-section">
+      <div class="form-section-title">📝 Información general</div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Título</label>
+          <input type="text" id="s-titulo" value="{{ config.titulo }}"/>
+        </div>
+        <div class="form-group">
+          <label>Subtítulo</label>
+          <input type="text" id="s-subtitulo" value="{{ config.subtitulo }}"/>
+        </div>
+      </div>
+      <div style="margin-bottom:16px">
+        <label style="display:flex;align-items:center;gap:12px;cursor:pointer;width:fit-content">
+          <div class="toggle-wrap" onclick="togglePublico()" style="cursor:pointer">
+            <div class="toggle-track" id="toggleTrack" style="{{ 'background:var(--azul);border-color:var(--azul)' if config.sorteoPublico else '' }}">
+              <div class="toggle-thumb" style="{{ 'transform:translateX(20px)' if config.sorteoPublico else '' }}"></div>
+            </div>
+          </div>
+          <div>
+            <div style="font-weight:700;font-size:.95rem">Página de sorteo pública</div>
+            <div style="font-size:.78rem;color:rgba(255,255,255,.4)">Si está desactivado, <code>/</code> redirige a <code>/numeros</code></div>
+          </div>
+        </label>
+      </div>
+      <div class="btn-row">
+        <button class="btn-save" onclick="saveGeneral()">💾 Guardar</button>
+        <span class="save-ok" id="ok-general">✓ Guardado</span>
+      </div>
+    </div>
+
+    {# premios #}
+    <div class="form-section">
+      <div class="form-section-title">🏆 Premios</div>
+      <div class="lista-items" id="premios-lista">
+        {% for p in config.premios %}
+        <div class="item-row">
+          <input class="w-emoji" type="text" placeholder="🎁" value="{{ p.emoji or '' }}"/>
+          <input type="text" placeholder="Nombre del premio" value="{{ p.nombre }}"/>
+          <div class="item-row-label">Cant.</div>
+          <input class="w-sm" type="number" min="1" value="{{ p.cantidad }}" placeholder="1"/>
+          <div class="item-row-label">Ganador</div>
+          <input class="w-md" type="text" placeholder="null o número" value="{{ p.ganador if p.ganador is not none else '' }}"/>
+          <button class="btn-remove-item" onclick="this.closest('.item-row').remove()">✕</button>
+        </div>
+        {% endfor %}
+      </div>
+      <button class="btn-add-item" onclick="addPremio()">＋ Agregar premio</button>
+      <div class="btn-row" style="margin-top:16px">
+        <button class="btn-save" onclick="savePremios()">💾 Guardar premios</button>
+        <span class="save-ok" id="ok-premios">✓ Guardado</span>
+      </div>
+    </div>
+
+    {# resultados #}
+    <div class="form-section">
+      <div class="form-section-title">📋 Resultados del sorteo</div>
+      <div class="modo-toggle">
+        <button class="modo-btn {{ 'active' if not config.resultados else '' }}" id="modo-live" onclick="setModo('live')">🎰 Sorteo en vivo</button>
+        <button class="modo-btn {{ 'active' if config.resultados else '' }}" id="modo-consulta" onclick="setModo('consulta')">📋 Mostrar resultados</button>
+      </div>
+      <div id="resultados-panel" style="{{ 'display:none' if not config.resultados else '' }}">
+        <div class="lista-items" id="resultados-lista">
+          {% if config.resultados %}
+            {% for r in config.resultados %}
+            <div class="item-row">
+              <input class="w-emoji" type="text" placeholder="🥇" value="{{ r.emoji or '' }}"/>
+              <input type="text" placeholder="Nombre del premio" value="{{ r.nombre or r.premio or '' }}"/>
+              <div class="item-row-label">N°</div>
+              <input class="w-md" type="text" placeholder="042" value="{{ r.numero }}"/>
+              <button class="btn-remove-item" onclick="this.closest('.item-row').remove()">✕</button>
+            </div>
+            {% endfor %}
+          {% endif %}
+        </div>
+        <button class="btn-add-item" onclick="addResultado()">＋ Agregar ganador</button>
+      </div>
+      <div class="btn-row" style="margin-top:16px">
+        <button class="btn-save" onclick="saveResultados()">💾 Guardar resultados</button>
+        <span class="save-ok" id="ok-resultados">✓ Guardado</span>
+      </div>
+    </div>
+
+  </div>
+
+  {# ═══════ TAB VENTA ═══════ #}
+  <div class="tab-panel" id="tab-venta">
+
+    <div class="form-section">
+      <div class="form-section-title">🎟️ Configuración de números</div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Bloque inicial</label>
+          <input type="number" id="v-bloque" value="{{ config.venta.bloqueInicial }}" min="10"/>
+        </div>
+        <div class="form-group">
+          <label>Incremento por bloque</label>
+          <input type="number" id="v-incremento" value="{{ config.venta.incremento }}" min="10"/>
+        </div>
+      </div>
+      <div class="btn-row">
+        <button class="btn-save" onclick="saveVentaConfig()">💾 Guardar</button>
+        <span class="save-ok" id="ok-venta-config">✓ Guardado</span>
+      </div>
+    </div>
+
+    <div class="form-section">
+      <div class="form-section-title">💰 Precios y promociones</div>
+      <div class="lista-items" id="precios-lista">
+        {% for p in config.venta.precios %}
+        <div class="item-row">
+          <div class="item-row-label">Cant.</div>
+          <input class="w-sm" type="number" min="1" value="{{ p.cantidad }}" placeholder="1"/>
+          <div class="item-row-label">Precio $</div>
+          <input class="w-md" type="number" min="0" value="{{ p.precio }}" placeholder="5000"/>
+          <div class="item-row-label">Label</div>
+          <input type="text" placeholder="Ej: 3 x $12.000" value="{{ p.label or '' }}"/>
+          <label style="display:flex;align-items:center;gap:4px;white-space:nowrap;color:rgba(255,255,255,.6);font-size:.82rem;cursor:pointer">
+            <input type="checkbox" {{ 'checked' if p.promo else '' }} style="width:auto;flex:none"/> Promo
+          </label>
+          <button class="btn-remove-item" onclick="this.closest('.item-row').remove()">✕</button>
+        </div>
+        {% endfor %}
+      </div>
+      <button class="btn-add-item" onclick="addPrecio()">＋ Agregar precio</button>
+      <div class="btn-row" style="margin-top:16px">
+        <button class="btn-save" onclick="savePrecios()">💾 Guardar precios</button>
+        <span class="save-ok" id="ok-precios">✓ Guardado</span>
+      </div>
+    </div>
+
+    <div class="form-section">
+      <div class="form-section-title">🔐 Contraseña del backoffice</div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Nueva contraseña</label>
+          <input type="password" id="new-pwd" placeholder="••••••••"/>
+        </div>
+        <div class="form-group">
+          <label>Confirmar</label>
+          <input type="password" id="confirm-pwd" placeholder="••••••••"/>
+        </div>
+      </div>
+      <div class="btn-row">
+        <button class="btn-save" onclick="savePassword()">💾 Cambiar contraseña</button>
+        <span class="save-ok" id="ok-pwd">✓ Guardado</span>
+      </div>
+    </div>
+
+  </div>
+
+  {# ═══════ TAB AVANZADO ═══════ #}
+  <div class="tab-panel" id="tab-danger">
+    <div class="danger-zone">
+      <div class="danger-zone-title">⚠️ Zona de peligro</div>
+
+      <div class="danger-item">
+        <div class="danger-desc">
+          <p>Resetear bloque actual</p>
+          <small>Vuelve el máximo de números visibles al bloque inicial ({{ config.venta.bloqueInicial }}). No borra compradores.</small>
+        </div>
+        <button class="btn-danger" onclick="confirmAction('reset-max','¿Resetear el bloque al inicial?')">Resetear bloque</button>
+      </div>
+
+      <div class="danger-item">
+        <div class="danger-desc">
+          <p>Borrar TODOS los compradores</p>
+          <small>Elimina todas las reservas de la base de datos. Esta acción no se puede deshacer.</small>
+        </div>
+        <button class="btn-danger" onclick="confirmAction('reset-compradores','⚠️ ¿Borrar TODOS los compradores? Esta acción no se puede deshacer.')">Borrar compradores</button>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+{# ── confirm modal ── #}
+<div class="confirm-overlay hidden" id="confirmModal">
+  <div class="confirm-card">
+    <span class="confirm-icon" id="confirmIcon">⚠️</span>
+    <div class="confirm-title" id="confirmTitle">¿Estás seguro?</div>
+    <div class="confirm-msg" id="confirmMsg"></div>
+    <div class="confirm-btns">
+      <button class="confirm-cancel" id="confirmCancel">Cancelar</button>
+      <button class="confirm-ok" id="confirmOk">Confirmar</button>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+/* ── confirm modal ── */
+function showConfirm({icon='⚠️', title='¿Estás seguro?', msg='', danger=false}={}){
+  return new Promise(resolve=>{
+    document.getElementById('confirmIcon').textContent  = icon;
+    document.getElementById('confirmTitle').textContent = title;
+    document.getElementById('confirmMsg').textContent   = msg;
+    const okBtn = document.getElementById('confirmOk');
+    okBtn.classList.toggle('is-danger', danger);
+    document.getElementById('confirmModal').classList.remove('hidden');
+
+    const cleanup = ()=> document.getElementById('confirmModal').classList.add('hidden');
+    const onOk     = ()=>{ cleanup(); resolve(true);  okBtn.removeEventListener('click',onOk); cancelBtn.removeEventListener('click',onCancel); };
+    const onCancel = ()=>{ cleanup(); resolve(false); okBtn.removeEventListener('click',onOk); cancelBtn.removeEventListener('click',onCancel); };
+    const cancelBtn = document.getElementById('confirmCancel');
+    okBtn.addEventListener('click', onOk);
+    cancelBtn.addEventListener('click', onCancel);
+    document.getElementById('confirmModal').addEventListener('click', e=>{
+      if(e.target===document.getElementById('confirmModal')) onCancel();
+    }, {once:true});
+  });
+}
+
+/* ── tabs ── */
+function showTab(id, el){
+  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('tab-'+id).classList.add('active');
+  el.classList.add('active');
+}
+
+/* ── api helper ── */
+async function api(path, body){
+  const r = await fetch(path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+  return r.json();
+}
+function showOk(id){ const el=document.getElementById(id);el.style.display='inline';setTimeout(()=>el.style.display='none',2500);}
+
+/* ── general ── */
+let _sorteoPublico = {{ 'true' if config.sorteoPublico else 'false' }};
+
+function togglePublico(){
+  _sorteoPublico = !_sorteoPublico;
+  const track = document.getElementById('toggleTrack');
+  const thumb = track.querySelector('.toggle-thumb');
+  if(_sorteoPublico){
+    track.style.background = 'var(--azul)'; track.style.borderColor = 'var(--azul)';
+    thumb.style.transform = 'translateX(20px)';
+  } else {
+    track.style.background = ''; track.style.borderColor = '';
+    thumb.style.transform = '';
+  }
+  saveGeneral();
+}
+
+async function saveGeneral(){
+  const r = await api('/admin/config',{
+    titulo: document.getElementById('s-titulo').value,
+    subtitulo: document.getElementById('s-subtitulo').value,
+    sorteoPublico: _sorteoPublico,
+  });
+  if(r.ok){showOk('ok-general');showToast('✓ Guardado');}else showToast('Error: '+r.error);
+}
+
+/* ── premios ── */
+function addPremio(){
+  const row=document.createElement('div');row.className='item-row';
+  row.innerHTML=`<input class="w-emoji" type="text" placeholder="🎁" value="🎁"/>
+    <input type="text" placeholder="Nombre del premio" value=""/>
+    <div class="item-row-label">Cant.</div>
+    <input class="w-sm" type="number" min="1" value="1"/>
+    <div class="item-row-label">Ganador</div>
+    <input class="w-md" type="text" placeholder="null o número" value=""/>
+    <button class="btn-remove-item" onclick="this.closest('.item-row').remove()">✕</button>`;
+  document.getElementById('premios-lista').appendChild(row);
+}
+async function savePremios(){
+  const rows=[...document.querySelectorAll('#premios-lista .item-row')];
+  const premios=rows.map(r=>{
+    const inputs=r.querySelectorAll('input');
+    const ganadorRaw=inputs[3].value.trim();
+    return{emoji:inputs[0].value.trim()||'🎁',nombre:inputs[1].value.trim(),cantidad:parseInt(inputs[2].value)||1,ganador:ganadorRaw===''||ganadorRaw==='null'?null:ganadorRaw};
+  });
+  const r=await api('/admin/config',{premios});
+  if(r.ok){showOk('ok-premios');showToast('✓ Premios guardados');}else showToast('Error: '+r.error);
+}
+
+/* ── resultados ── */
+function setModo(modo){
+  document.getElementById('modo-live').classList.toggle('active',modo==='live');
+  document.getElementById('modo-consulta').classList.toggle('active',modo==='consulta');
+  document.getElementById('resultados-panel').style.display=modo==='consulta'?'block':'none';
+}
+function addResultado(){
+  const row=document.createElement('div');row.className='item-row';
+  row.innerHTML=`<input class="w-emoji" type="text" placeholder="🥇" value="🥇"/>
+    <input type="text" placeholder="Nombre del premio"/>
+    <div class="item-row-label">N°</div>
+    <input class="w-md" type="text" placeholder="042"/>
+    <button class="btn-remove-item" onclick="this.closest('.item-row').remove()">✕</button>`;
+  document.getElementById('resultados-lista').appendChild(row);
+}
+async function saveResultados(){
+  const esConsulta=document.getElementById('modo-consulta').classList.contains('active');
+  let resultados=null;
+  if(esConsulta){
+    const rows=[...document.querySelectorAll('#resultados-lista .item-row')];
+    resultados=rows.map(r=>{
+      const inputs=r.querySelectorAll('input');
+      return{emoji:inputs[0].value.trim(),nombre:inputs[1].value.trim(),numero:inputs[2].value.trim()};
+    }).filter(r=>r.nombre&&r.numero);
+    if(!resultados.length)resultados=null;
+  }
+  const r=await api('/admin/config',{resultados});
+  if(r.ok){showOk('ok-resultados');showToast('✓ Resultados guardados');}else showToast('Error: '+r.error);
+}
+
+/* ── venta ── */
+async function saveVentaConfig(){
+  const cfg=JSON.parse(JSON.stringify({{ config.venta | tojson }}));
+  cfg.bloqueInicial=parseInt(document.getElementById('v-bloque').value)||200;
+  cfg.incremento=parseInt(document.getElementById('v-incremento').value)||50;
+  const r=await api('/admin/config',{venta:{...cfg,bloqueInicial:cfg.bloqueInicial,incremento:cfg.incremento}});
+  if(r.ok){showOk('ok-venta-config');showToast('✓ Guardado');}else showToast('Error: '+r.error);
+}
+
+/* ── precios ── */
+function addPrecio(){
+  const row=document.createElement('div');row.className='item-row';
+  row.innerHTML=`<div class="item-row-label">Cant.</div>
+    <input class="w-sm" type="number" min="1" value="1"/>
+    <div class="item-row-label">Precio $</div>
+    <input class="w-md" type="number" min="0" value="5000"/>
+    <div class="item-row-label">Label</div>
+    <input type="text" placeholder="Ej: 3 x $12.000"/>
+    <label style="display:flex;align-items:center;gap:4px;white-space:nowrap;color:rgba(255,255,255,.6);font-size:.82rem;cursor:pointer">
+      <input type="checkbox" style="width:auto;flex:none"/> Promo
+    </label>
+    <button class="btn-remove-item" onclick="this.closest('.item-row').remove()">✕</button>`;
+  document.getElementById('precios-lista').appendChild(row);
+}
+async function savePrecios(){
+  const rows=[...document.querySelectorAll('#precios-lista .item-row')];
+  const precios=rows.map(r=>{
+    const inputs=r.querySelectorAll('input');
+    return{cantidad:parseInt(inputs[0].value)||1,precio:parseInt(inputs[1].value)||0,label:inputs[2].value.trim()||null,promo:inputs[3].checked};
+  });
+  const ventaActual=JSON.parse(JSON.stringify({{ config.venta | tojson }}));
+  const r=await api('/admin/config',{venta:{...ventaActual,precios}});
+  if(r.ok){showOk('ok-precios');showToast('✓ Precios guardados');}else showToast('Error: '+r.error);
+}
+
+/* ── password ── */
+async function savePassword(){
+  const pwd=document.getElementById('new-pwd').value;
+  const conf=document.getElementById('confirm-pwd').value;
+  if(!pwd){showToast('Ingresá una contraseña');return;}
+  if(pwd!==conf){showToast('Las contraseñas no coinciden');return;}
+  const r=await api('/admin/config',{admin:{password:pwd}});
+  if(r.ok){showOk('ok-pwd');showToast('✓ Contraseña cambiada');document.getElementById('new-pwd').value='';document.getElementById('confirm-pwd').value='';}
+  else showToast('Error: '+r.error);
+}
+
+/* ── liberar número individual ── */
+async function liberarNumero(numero, btn){
+  const ok = await showConfirm({icon:'🎟️', title:'Liberar número', msg:`¿Liberar el número ${numero}? Quedará disponible para otra persona.`});
+  if(!ok) return;
+  const r = await api('/admin/numero/delete', {numero});
+  if(r.ok){
+    const chip = document.getElementById('chip-'+numero);
+    chip.classList.add('liberado');
+    setTimeout(()=>{
+      const tr = chip.closest('tr');
+      chip.remove();
+      // si no quedan chips activos, quitar la fila
+      const chips = tr.querySelectorAll('.num-chip:not(.liberado)');
+      if(!chips.length) tr.remove();
+      // actualizar contador
+      const activos = tr.querySelectorAll('.num-chip:not(.liberado)').length;
+      const cntEl = tr.querySelector('td:first-child div');
+      if(cntEl) cntEl.textContent = activos + ' número' + (activos!==1?'s':'');
+    }, 400);
+    showToast(`✓ Número ${numero} liberado`);
+  } else showToast('Error: '+r.error);
+}
+
+/* ── delete comprador (todos) ── */
+async function deleteComprador(nombre,apellido,email,btn){
+  const ok = await showConfirm({icon:'👤', title:'Liberar todos', msg:`¿Liberar todos los números de ${nombre} ${apellido}? Quedarán disponibles para otras personas.`, danger:true});
+  if(!ok) return;
+  const r=await api('/admin/comprador/delete',{nombre,apellido,email});
+  if(r.ok){btn.closest('tr').remove();showToast('✓ Números liberados');}
+  else showToast('Error: '+r.error);
+}
+
+/* ── danger actions ── */
+async function confirmAction(action, msg){
+  const ok = await showConfirm({icon:'⚠️', title:'Zona de peligro', msg, danger:true});
+  if(!ok) return;
+  const r=await api('/admin/'+action,{});
+  if(r.ok){showToast('✓ Listo');setTimeout(()=>location.reload(),1000);}
+  else showToast('Error: '+r.error);
+}
+</script>
+{% endblock %}

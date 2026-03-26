@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block title %}Admin – Club 17 de Octubre{% endblock %}
+
+{% block extra_css %}
+.login-wrap{
+  min-height:80vh;display:flex;align-items:center;justify-content:center;
+  padding:40px 20px;
+}
+.login-card{
+  background:linear-gradient(160deg,#0d1e4a,#0a1530);
+  border:2px solid rgba(245,197,24,.3);border-radius:24px;
+  padding:40px 36px;width:100%;max-width:380px;text-align:center;
+  animation:popIn .5s cubic-bezier(.34,1.56,.64,1);
+}
+@keyframes popIn{from{transform:scale(.7);opacity:0}to{transform:scale(1);opacity:1}}
+.login-icon{font-size:3.5rem;margin-bottom:10px;}
+.login-title{font-family:'Bebas Neue',cursive;font-size:2rem;letter-spacing:4px;color:var(--dorado);margin-bottom:4px;}
+.login-sub{font-size:.85rem;color:rgba(255,255,255,.45);letter-spacing:1px;margin-bottom:28px;}
+.login-card input{
+  width:100%;padding:12px 16px;border-radius:12px;
+  border:2px solid rgba(255,255,255,.15);background:rgba(255,255,255,.08);
+  color:#fff;font-family:'Nunito',sans-serif;font-size:1rem;outline:none;
+  text-align:center;letter-spacing:3px;font-size:1.1rem;
+  transition:border-color .2s;margin-bottom:16px;
+}
+.login-card input:focus{border-color:var(--dorado);background:rgba(245,197,24,.07);}
+.btn-login{
+  width:100%;padding:13px;border-radius:50px;border:none;
+  background:linear-gradient(135deg,var(--rojo),var(--rojo-dark));
+  color:#fff;font-family:'Bebas Neue',cursive;font-size:1.3rem;letter-spacing:3px;
+  cursor:pointer;box-shadow:0 6px 20px rgba(204,30,43,.4);transition:transform .15s;
+}
+.btn-login:hover{transform:scale(1.03);}
+.login-error{color:#ff8fa3;font-size:.9rem;font-weight:700;margin-bottom:12px;}
+{% endblock %}
+
+{% block body %}
+<div class="login-wrap">
+  <div class="login-card">
+    <div class="login-icon">🔐</div>
+    <div class="login-title">BACKOFFICE</div>
+    <div class="login-sub">CLUB 17 DE OCTUBRE</div>
+    {% if error %}<div class="login-error">⚠️ {{ error }}</div>{% endif %}
+    <form method="post">
+      <input type="password" name="password" placeholder="Contraseña" autofocus/>
+      <button type="submit" class="btn-login">INGRESAR</button>
+    </form>
+  </div>
+</div>
+{% endblock %}

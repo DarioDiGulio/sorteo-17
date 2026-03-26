@@ -1,0 +1,7 @@
+.env
+*.db
+__pycache__/
+*.pyc
+server.log
+.git/
+index.html

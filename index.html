@@ -469,6 +469,67 @@
       animation: pulseSortear 1s ease-in-out infinite;
     }
 
+    /* ── MODO CONSULTA ── */
+    .consulta-banner {
+      background: linear-gradient(135deg, var(--azul-dark), #081a52);
+      border: 2px solid rgba(245,197,24,0.4);
+      border-radius: 16px;
+      padding: 16px 24px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 28px;
+      animation: fadeUp 0.5s ease-out;
+    }
+    .consulta-icon { font-size: 2rem; flex-shrink: 0; }
+    .consulta-text-title {
+      font-family: 'Bebas Neue', cursive;
+      font-size: 1.2rem;
+      letter-spacing: 3px;
+      color: var(--dorado);
+    }
+    .consulta-text-sub {
+      font-size: 0.8rem;
+      color: rgba(255,255,255,0.5);
+      margin-top: 2px;
+    }
+    .resultado-card {
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(245,197,24,0.2);
+      border-radius: 14px;
+      padding: 18px 22px;
+      margin-bottom: 12px;
+      animation: slideRight 0.4s ease-out both;
+    }
+    .resultado-card:nth-child(1) { animation-delay:.05s; border-color: rgba(245,197,24,.5); background: rgba(245,197,24,.07); }
+    .resultado-card:nth-child(2) { animation-delay:.1s; border-color: rgba(192,192,192,.4); }
+    .resultado-card:nth-child(3) { animation-delay:.15s; border-color: rgba(205,127,50,.4); }
+    .resultado-pos {
+      width: 48px; height: 48px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Bebas Neue', cursive;
+      font-size: 1.5rem;
+      flex-shrink: 0;
+    }
+    .resultado-info { flex: 1; }
+    .resultado-premio {
+      font-weight: 900;
+      font-size: 1rem;
+      color: rgba(255,255,255,0.75);
+    }
+    .resultado-numero {
+      font-family: 'Bebas Neue', cursive;
+      font-size: 2.4rem;
+      letter-spacing: 6px;
+      color: var(--blanco);
+      line-height: 1;
+    }
+    .resultado-emoji { font-size: 2.2rem; }
+
     /* ── GRAN PREMIO OVERLAY ── */
     .gran-premio-overlay {
       position: fixed; inset: 0;
@@ -685,12 +746,12 @@ async function loadConfig(){
 
 /* ═══ RENDER ═══ */
 function renderApp(){
-  const {titulo,subtitulo,totalTickets,soldTickets,ticketPrice,premios}=config;
+  const {titulo,subtitulo,totalTickets,soldTickets,ticketPrice,premios,resultados}=config;
   const sold=Math.min(soldTickets,totalTickets);
-  const avail=totalTickets-sold;
   const recaud=sold*ticketPrice;
   const recaudStr=recaud>=1000000?`$${(recaud/1000000).toFixed(1)}M`:recaud>=1000?`$${(recaud/1000).toFixed(0)}K`:`$${recaud}`;
   const pct=totalTickets>0?(sold/totalTickets)*100:0;
+  const modoConsulta=Array.isArray(resultados)&&resultados.length>0;
 
   const premiosHTML=premios.map((p,i)=>`
     <div class="premio-card" style="animation-delay:${i*.1}s">
@@ -703,20 +764,32 @@ function renderApp(){
     </div>
   `).join('');
 
-  document.getElementById('app').innerHTML=`
-    <header>
-      <div class="club-tag">Club Atlético</div>
-      <div class="escudo-wrap"><img src="logo17.png" alt="Club 17 de Octubre" /></div>
-      <div class="titulo-main"><span>Gran Rifa</span><br>${titulo}</div>
-      <div class="subtitulo">${subtitulo}</div>
-    </header>
 
-    <div class="divider"><div class="divider-line"></div><div class="divider-icon">⚽</div><div class="divider-line"></div></div>
-    <div class="section-title"><span>🏆</span> Premios en juego</div>
-    <div id="premios-list">${premiosHTML}</div>
+  const consultaHTML = modoConsulta ? `
+    <div class="divider"><div class="divider-line"></div><div class="divider-icon">🏅</div><div class="divider-line"></div></div>
+    <div class="consulta-banner">
+      <div class="consulta-icon">📋</div>
+      <div>
+        <div class="consulta-text-title">Resultados del sorteo</div>
+        <div class="consulta-text-sub">El sorteo ya fue realizado. Estos son los números ganadores.</div>
+      </div>
+    </div>
+    ${resultados.map((r,i)=>{
+      const posClass=i===0?'pos-1':i===1?'pos-2':i===2?'pos-3':'pos-n';
+      return `
+        <div class="resultado-card" style="animation-delay:${i*.08}s">
+          <div class="resultado-pos ${posClass}">${i+1}°</div>
+          <div class="resultado-info">
+            <div class="resultado-premio">${r.nombre||r.premio}</div>
+            <div class="resultado-numero">N° ${r.numero}</div>
+          </div>
+          <div class="resultado-emoji">${r.emoji||'🎁'}</div>
+        </div>`;
+    }).join('')}
+  ` : '';
 
+  const sorteoHTML = modoConsulta ? '' : `
     <div class="divider"><div class="divider-line"></div><div class="divider-icon">🎟️</div><div class="divider-line"></div></div>
-
     <div class="drum-outer">
       <div class="drum-club">Club 17 de Octubre</div>
       <div class="drum-title">SORTEO EN VIVO</div>
@@ -725,22 +798,33 @@ function renderApp(){
       <button class="btn-sortear" id="btnSortear" onclick="doSorteo()">⚽ SORTEAR ⚽</button>
       <div class="sorteo-status" id="sorteoStatus">Presioná SORTEAR para comenzar</div>
     </div>
-
     <div id="winnersSection" style="display:none">
       <div class="section-title"><span>🏅</span> Ganadores</div>
       <div id="winnersList"></div>
     </div>
-
     <div style="text-align:center;margin-bottom:40px">
       <button class="btn-reset" onclick="resetSorteo()">↺ Reiniciar sorteo</button>
     </div>
+  `;
 
+  document.getElementById('app').innerHTML=`
+    <header>
+      <div class="club-tag">Club Atlético</div>
+      <div class="escudo-wrap"><img src="logo17.png" alt="Club 17 de Octubre" /></div>
+      <div class="titulo-main"><span>Gran Rifa</span><br>${titulo}</div>
+      <div class="subtitulo">${subtitulo}</div>
+    </header>
+    <div class="divider"><div class="divider-line"></div><div class="divider-icon">⚽</div><div class="divider-line"></div></div>
+    <div class="section-title"><span>🏆</span> Premios en juego</div>
+    <div id="premios-list">${premiosHTML}</div>
+    ${consultaHTML}
+    ${sorteoHTML}
     <footer>
       <img src="logo17.png" alt=""> Club 17 de Octubre &nbsp;·&nbsp; Sorteo oficial
     </footer>
   `;
 
-  resetSorteo(true);
+  if(!modoConsulta) resetSorteo(true);
 }
 
 /* ═══ SORTEO ═══ */
@@ -811,7 +895,7 @@ function sorteoGranPremio(prize, total){
   document.querySelector('.drum-outer').classList.add('gran-sorteo');
 
   const drumEl   = document.getElementById('granPremoDrum');
-  const number   = remainingPool.pop(); // sacar el número ya
+  const number   = pickNumber(prize);
 
   // Secuencia con desaceleración progresiva
   // Fase 1: rápido (50ms × 30 ticks)
@@ -876,8 +960,19 @@ function sorteoGranPremio(prize, total){
   nextTick();
 }
 
+function pickNumber(prize){
+  if(prize.ganador != null){
+    const forced = String(prize.ganador).padStart(3,'0');
+    // sacarlo del pool si está para no repetirlo en otro sorteo
+    const idx = remainingPool.indexOf(forced);
+    if(idx !== -1) remainingPool.splice(idx, 1);
+    return forced;
+  }
+  return remainingPool.pop();
+}
+
 function revealWinner(prize, total){
-  const number = remainingPool.pop();
+  const number = pickNumber(prize);
   document.getElementById('drumNumber').textContent = number;
   const pos = winners.length + 1;
   winners.push({number, prize:prize.nombre, emoji:prize.emoji||'🎁', pos});

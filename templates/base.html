@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>{% block title %}Club 17 de Octubre{% endblock %}</title>
+  <link rel="icon" type="image/png" href="/logo17.png"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Nunito:wght@400;700;900&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --azul:       #1a4bc4;
+      --azul-dark:  #0f2d7a;
+      --azul-mid:   #1640ab;
+      --rojo:       #cc1e2b;
+      --rojo-dark:  #9e1520;
+      --blanco:     #ffffff;
+      --dorado:     #f5c518;
+      --dorado-dark:#c49a10;
+    }
+    *{box-sizing:border-box;margin:0;padding:0;}
+    body{
+      font-family:'Nunito',sans-serif;
+      background:var(--azul-dark);
+      min-height:100vh;
+      color:var(--blanco);
+      overflow-x:hidden;
+    }
+    /* stripes camiseta */
+    body::before{
+      content:'';
+      position:fixed;inset:0;
+      background-image:repeating-linear-gradient(
+        90deg,
+        rgba(26,75,196,.15) 0,rgba(26,75,196,.15) 36px,
+        rgba(255,255,255,.03) 36px,rgba(255,255,255,.03) 72px
+      );
+      pointer-events:none;z-index:0;
+    }
+    /* confetti canvas */
+    #confetti-canvas{position:fixed;inset:0;pointer-events:none;z-index:9999;}
+
+    /* stars */
+    .stars{position:fixed;inset:0;pointer-events:none;z-index:0;}
+    .star{position:absolute;background:#fff;border-radius:50%;animation:twinkle 3s infinite alternate;}
+    @keyframes twinkle{from{opacity:.15;transform:scale(1);}to{opacity:.9;transform:scale(1.5);}}
+
+    /* ticker */
+    .ticker-strip{
+      background:var(--rojo);padding:9px 0;
+      overflow:hidden;white-space:nowrap;
+      border-bottom:3px solid var(--dorado);
+      position:relative;z-index:2;
+    }
+    .ticker-inner{display:inline-block;animation:ticker 26s linear infinite;}
+    .ticker-item{display:inline-block;padding:0 28px;font-family:'Bebas Neue',cursive;font-size:1.1rem;letter-spacing:3px;color:var(--blanco);}
+    .ticker-dot{color:var(--dorado);}
+    @keyframes ticker{from{transform:translateX(0);}to{transform:translateX(-50%);}}
+
+    /* container */
+    .container{position:relative;z-index:1;max-width:860px;margin:0 auto;padding:0 20px 80px;}
+
+    /* header */
+    header{text-align:center;padding:36px 20px 20px;}
+    .club-tag{font-family:'Bebas Neue',cursive;font-size:.9rem;letter-spacing:5px;color:var(--dorado);margin-bottom:6px;}
+    .escudo-wrap{display:inline-block;margin-bottom:14px;
+      animation:escudoFloat 3.5s ease-in-out infinite;
+      filter:drop-shadow(0 6px 18px rgba(0,0,0,.5)) drop-shadow(0 0 18px rgba(245,197,24,.3));}
+    .escudo-wrap img{width:80px;display:block;}
+    @keyframes escudoFloat{0%,100%{transform:translateY(0) rotate(-1deg);}50%{transform:translateY(-12px) rotate(1deg);}}
+
+    /* divider */
+    .divider{display:flex;align-items:center;gap:12px;margin:22px 0;}
+    .divider-line{flex:1;height:2px;background:linear-gradient(90deg,transparent,var(--dorado),transparent);}
+    .divider-icon{font-size:1.3rem;}
+
+    /* section title */
+    .section-title{
+      font-family:'Bebas Neue',cursive;font-size:1.7rem;letter-spacing:4px;
+      color:var(--blanco);margin-bottom:14px;display:flex;align-items:center;gap:10px;
+    }
+    .section-title span{color:var(--dorado);}
+
+    /* toast */
+    .toast{
+      position:fixed;bottom:28px;left:50%;
+      transform:translateX(-50%) translateY(120px);
+      background:linear-gradient(135deg,var(--rojo),var(--rojo-dark));
+      color:var(--blanco);padding:12px 28px;border-radius:50px;
+      font-family:'Bebas Neue',cursive;font-size:1.15rem;letter-spacing:2px;
+      box-shadow:0 8px 30px rgba(0,0,0,.4);z-index:10000;
+      transition:transform .4s cubic-bezier(.34,1.56,.64,1);
+      border-top:2px solid var(--dorado);
+    }
+    .toast.show{transform:translateX(-50%) translateY(0);}
+
+    /* sparkle */
+    .sparkle{position:fixed;pointer-events:none;z-index:9998;animation:sparkleAnim .9s ease-out forwards;}
+    @keyframes sparkleAnim{0%{opacity:1;transform:scale(0) rotate(0)}50%{opacity:1;transform:scale(1.6) rotate(180deg)}100%{opacity:0;transform:scale(0) rotate(360deg)}}
+
+    /* footer */
+    footer{text-align:center;padding:20px;font-size:.75rem;color:rgba(255,255,255,.25);letter-spacing:1px;}
+    footer img{width:24px;vertical-align:middle;opacity:.35;margin-right:6px;}
+
+    {% block extra_css %}{% endblock %}
+  </style>
+</head>
+<body>
+
+<canvas id="confetti-canvas"></canvas>
+<div class="stars" id="stars"></div>
+
+<div class="ticker-strip">
+  <div class="ticker-inner" id="tickerInner"></div>
+</div>
+
+{% block body %}{% endblock %}
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ── confetti ── */
+const _canvas=document.getElementById('confetti-canvas');
+const _ctx=_canvas.getContext('2d');
+let _parts=[];
+function _resize(){_canvas.width=innerWidth;_canvas.height=innerHeight;}
+addEventListener('resize',_resize);_resize();
+function launchConfetti(n,colors){
+  colors=colors||['#f5c518','#cc1e2b','#1a4bc4','#fff','#ffd700'];
+  for(let i=0;i<n;i++) _parts.push({
+    x:Math.random()*_canvas.width,y:-10,r:Math.random()*9+3,
+    c:colors[~~(Math.random()*colors.length)],
+    vx:(Math.random()-.5)*8,vy:Math.random()*5+2,
+    rot:Math.random()*360,rotV:(Math.random()-.5)*10,
+    shape:Math.random()>.5?'rect':'circle',alpha:1
+  });
+}
+(function _loop(){
+  _ctx.clearRect(0,0,_canvas.width,_canvas.height);
+  _parts=_parts.filter(p=>p.alpha>.01);
+  _parts.forEach(p=>{
+    p.x+=p.vx;p.y+=p.vy;p.rot+=p.rotV;p.vy+=.09;
+    if(p.y>_canvas.height*.72)p.alpha-=.013;
+    _ctx.save();_ctx.globalAlpha=p.alpha;
+    _ctx.translate(p.x,p.y);_ctx.rotate(p.rot*Math.PI/180);
+    _ctx.fillStyle=p.c;
+    if(p.shape==='rect')_ctx.fillRect(-p.r,-p.r/2,p.r*2,p.r);
+    else{_ctx.beginPath();_ctx.arc(0,0,p.r/2,0,Math.PI*2);_ctx.fill();}
+    _ctx.restore();
+  });
+  requestAnimationFrame(_loop);
+})();
+
+/* ── stars ── */
+(function(){
+  const el=document.getElementById('stars');
+  for(let i=0;i<80;i++){
+    const s=document.createElement('div');s.className='star';
+    const sz=Math.random()*2+.5;
+    s.style.cssText=`width:${sz}px;height:${sz}px;top:${Math.random()*100}%;left:${Math.random()*100}%;animation-delay:${Math.random()*3}s;animation-duration:${2+Math.random()*3}s`;
+    el.appendChild(s);
+  }
+})();
+
+/* ── ticker ── */
+(function(){
+  const msgs={% block ticker_msgs %}['⚽ CLUB 17 DE OCTUBRE','🏆 GRAN RIFA OFICIAL','🎟️ COMPRÁ TU NÚMERO','💪 APOYÁ AL CLUB','⭐ ¡BUENA SUERTE!']{% endblock %};
+  const inner=document.getElementById('tickerInner');
+  const full=(msgs.join(' · ')+' · ').repeat(4);
+  inner.innerHTML=full.split(' · ').map((t,i)=>
+    i%2===0?`<span class="ticker-item">${t}</span>`:`<span class="ticker-item ticker-dot">·</span>`
+  ).join('');
+})();
+
+/* ── toast ── */
+let _toastT;
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.classList.add('show');
+  clearTimeout(_toastT);_toastT=setTimeout(()=>t.classList.remove('show'),3000);
+}
+
+/* ── sparkles ── */
+function spawnSparkles(){
+  const emojis=['⚽','🌟','✨','💫','🎉','🏆','⭐'];
+  for(let i=0;i<9;i++) setTimeout(()=>{
+    const el=document.createElement('div');el.className='sparkle';
+    el.textContent=emojis[~~(Math.random()*emojis.length)];
+    el.style.cssText=`left:${Math.random()*100}vw;top:${Math.random()*100}vh;font-size:${1+Math.random()*1.8}rem;animation-duration:${.5+Math.random()*.5}s`;
+    document.body.appendChild(el);setTimeout(()=>el.remove(),1100);
+  },i*80);
+}
+</script>
+
+{% block extra_js %}{% endblock %}
+</body>
+</html>
