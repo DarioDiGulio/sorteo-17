@@ -249,7 +249,18 @@ def admin_logout():
 def admin():
     cfg   = get_config()
     maxn  = current_max()
-    venta = cfg.get('venta', {})
+
+    # Ensure all config sections referenced in the template exist so Jinja2
+    # never raises UndefinedError when the database has no saved config yet.
+    cfg.setdefault('titulo', '')
+    cfg.setdefault('subtitulo', '')
+    cfg.setdefault('sorteoPublico', False)
+    cfg.setdefault('premios', [])
+    cfg.setdefault('resultados', [])
+    venta = cfg.setdefault('venta', {})
+    venta.setdefault('bloqueInicial', 200)
+    venta.setdefault('incremento', 50)
+    venta.setdefault('precios', [])
 
     with get_db() as c:
         c.execute('SELECT numero, nombre, apellido, email, fecha FROM numeros ORDER BY fecha DESC')
