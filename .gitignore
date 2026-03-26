@@ -1,0 +1,7 @@
+.env
+*.pyc
+__pycache__/
+instance/
+.webassets-cache
+sorteo.db
+server.log
