@@ -68,7 +68,17 @@ def get_config():
     with get_db() as c:
         c.execute("SELECT valor FROM meta WHERE clave='config'")
         row = c.fetchone()
-        return json.loads(row['valor']) if row else {}
+        cfg = json.loads(row['valor']) if row else {}
+    cfg.setdefault('titulo', 'Gran Sorteo')
+    cfg.setdefault('subtitulo', '')
+    cfg.setdefault('sorteoPublico', True)
+    cfg.setdefault('premios', [])
+    cfg.setdefault('resultados', [])
+    cfg.setdefault('venta', {})
+    cfg['venta'].setdefault('bloqueInicial', 200)
+    cfg['venta'].setdefault('incremento', 50)
+    cfg['venta'].setdefault('precios', [])
+    return cfg
 
 
 def save_config(cfg):
