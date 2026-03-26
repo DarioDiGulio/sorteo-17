@@ -15,6 +15,7 @@ load_dotenv()
 
 BASE         = os.path.dirname(__file__)
 DATABASE_URL = os.environ['DATABASE_URL']
+PAYMENT_LINK = os.environ.get('PAYMENT_LINK', '')
 
 app = Flask(__name__, template_folder='templates')
 app.secret_key = os.environ.get('SECRET_KEY', 'sorteo17oct-dev')
@@ -201,6 +202,7 @@ def numeros():
         maxn=maxn,
         tomados=tomados,
         precios=precios,
+        payment_link=PAYMENT_LINK,
         mensaje=request.args.get('msg'),
         error=request.args.get('err'),
         exito_nums=request.args.get('nums'),

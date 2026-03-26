@@ -187,6 +187,25 @@
   .spinner{width:18px;height:18px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite;display:none;}
   @keyframes spin{to{transform:rotate(360deg)}}
 
+  /* ── pago ── */
+  .modal-pago{
+    background:rgba(46,196,182,.08);border:1px solid rgba(46,196,182,.3);
+    border-radius:14px;padding:14px 16px;margin-bottom:16px;
+    display:flex;align-items:center;gap:12px;
+  }
+  .modal-pago-icon{font-size:1.6rem;flex-shrink:0;}
+  .modal-pago-text{font-size:.82rem;color:rgba(255,255,255,.65);line-height:1.4;}
+  .modal-pago-text strong{color:rgba(46,196,182,.9);}
+  .btn-pagar{
+    display:flex;align-items:center;justify-content:center;gap:8px;
+    width:100%;padding:12px;border-radius:50px;border:none;margin-bottom:10px;
+    background:linear-gradient(135deg,#1aad19,#15911a);
+    color:#fff;font-family:'Bebas Neue',cursive;font-size:1.2rem;letter-spacing:3px;
+    cursor:pointer;text-decoration:none;
+    box-shadow:0 4px 16px rgba(26,173,25,.4);transition:transform .15s,box-shadow .15s;
+  }
+  .btn-pagar:hover{transform:scale(1.03);box-shadow:0 6px 22px rgba(26,173,25,.6);}
+
   /* ── éxito overlay ── */
   .exito-overlay{
     position:fixed;inset:0;background:rgba(8,26,82,.92);
@@ -301,6 +320,14 @@
         <label>Email</label>
         <input type="email" name="email" id="fEmail" placeholder="tu@email.com" required autocomplete="email"/>
       </div>
+      {% if payment_link %}
+      <div class="modal-pago">
+        <div class="modal-pago-icon">💳</div>
+        <div class="modal-pago-text">
+          Confirmá tu reserva y luego <strong>realizá el pago</strong> para asegurar tus números. Te vamos a enviar el link también por email.
+        </div>
+      </div>
+      {% endif %}
       <div class="modal-error" id="modalError"></div>
       <div class="modal-btns">
         <button type="button" class="btn-cancelar" onclick="closeModal()">Cancelar</button>
@@ -319,6 +346,16 @@
   <div class="exito-title">¡Reserva<br>Confirmada!</div>
   <div class="exito-sub" id="exitoSub"></div>
   <div class="exito-chips" id="exitoChips"></div>
+  {% if payment_link %}
+  <div style="width:100%;max-width:340px;padding:0 20px;margin-bottom:16px;">
+    <div style="font-size:.82rem;color:rgba(255,255,255,.5);text-align:center;margin-bottom:10px;letter-spacing:.5px;">
+      Para confirmar tu lugar, realizá el pago:
+    </div>
+    <a class="btn-pagar" href="{{ payment_link }}" target="_blank" rel="noopener">
+      💳 PAGAR AHORA
+    </a>
+  </div>
+  {% endif %}
   <button class="btn-volver" onclick="location.reload()">Ver más números</button>
 </div>
 {% endblock %}
