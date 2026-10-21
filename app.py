@@ -57,13 +57,16 @@ DEFAULT_CONFIG = {
         ],
     },
     'admin': {
-        'password': '17octubre',
+        # Contraseña inicial del admin: solo se usa al crear la config por primera vez
+        'password': os.environ.get('ADMIN_PASSWORD', '17octubre'),
     },
 }
 
 
 def init_db():
-    """Crea tablas e inserta config por defecto si no existe. Reintenta hasta que Postgres esté listo."""
+    """Migraciones: crea/actualiza tablas e inserta la config inicial (con la contraseña
+    del admin) si no existe. Es idempotente; corre al iniciar el contenedor (ver Dockerfile).
+    Reintenta hasta que Postgres esté listo."""
     for attempt in range(15):
         try:
             with get_db() as c:
@@ -95,6 +98,15 @@ def init_db():
                            ON CONFLICT (clave) DO NOTHING""",
                         (json.dumps(DEFAULT_CONFIG, ensure_ascii=False),)
                     )
+                else:
+                    # Configs viejas sin contraseña guardada: asignarle la inicial
+                    c.execute("SELECT valor FROM meta WHERE clave='config'")
+                    cfg = json.loads(c.fetchone()['valor'])
+                    if not cfg.get('admin', {}).get('password'):
+                        cfg['admin'] = {**cfg.get('admin', {}), 'password': DEFAULT_CONFIG['admin']['password']}
+                        c.execute("UPDATE meta SET valor=%s WHERE clave='config'",
+                                  (json.dumps(cfg, ensure_ascii=False),))
+            print('Migraciones aplicadas')
             return
         except psycopg2.OperationalError:
             if attempt < 14:
@@ -284,8 +296,8 @@ def admin_login():
     error = None
     if request.method == 'POST':
         pwd      = request.form.get('password', '')
-        expected = get_config().get('admin', {}).get('password', '17octubre')
-        if pwd == expected:
+        expected = get_config().get('admin', {}).get('password')
+        if expected and pwd == expected:
             session['admin'] = True
             return redirect(url_for('admin'))
         error = 'Contraseña incorrecta'
