@@ -16,6 +16,8 @@ load_dotenv()
 BASE         = os.path.dirname(__file__)
 DATABASE_URL = os.environ['DATABASE_URL']
 PAYMENT_LINK = os.environ.get('PAYMENT_LINK', '')
+# Cuando quedan esta cantidad de números libres (o menos), se habilita un nuevo bloque
+UMBRAL_EXPANSION = 10
 
 app = Flask(__name__, template_folder='templates')
 app.secret_key = os.environ.get('SECRET_KEY', 'sorteo17oct-dev')
@@ -143,7 +145,7 @@ def maybe_expand():
 
         c.execute('SELECT COUNT(*) AS cnt FROM numeros WHERE numero <= %s', (maxn,))
         cnt = c.fetchone()['cnt']
-        if cnt >= maxn:
+        if maxn - cnt <= UMBRAL_EXPANSION:
             maxn += inc
             c.execute(
                 """INSERT INTO meta (clave, valor) VALUES ('current_max', %s)
