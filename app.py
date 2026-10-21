@@ -14,8 +14,13 @@ from flask import (Flask, jsonify, redirect, render_template, request,
 load_dotenv()
 
 BASE         = os.path.dirname(__file__)
-DATABASE_URL = os.environ['DATABASE_URL']
-PAYMENT_LINK = os.environ.get('PAYMENT_LINK', '')
+DB_CONFIG = {
+    'host':     os.environ['DB_HOST'],
+    'port':     os.environ.get('DB_PORT', '5432'),
+    'dbname':   os.environ['DB_NAME'],
+    'user':     os.environ['DB_USER'],
+    'password': os.environ['DB_PASSWORD'],
+}
 # Cuando quedan esta cantidad de números libres (o menos), se habilita un nuevo bloque
 UMBRAL_EXPANSION = 10
 
@@ -26,7 +31,7 @@ app.secret_key = os.environ.get('SECRET_KEY', 'sorteo17oct-dev')
 # ── DB ────────────────────────────────────────────────
 @contextmanager
 def get_db():
-    conn = psycopg2.connect(DATABASE_URL)
+    conn = psycopg2.connect(**DB_CONFIG)
     try:
         cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
         yield cur
@@ -210,7 +215,6 @@ def numeros():
         maxn=maxn,
         tomados=tomados,
         precios=precios,
-        payment_link=PAYMENT_LINK,
         mensaje=request.args.get('msg'),
         error=request.args.get('err'),
         exito_nums=request.args.get('nums'),
