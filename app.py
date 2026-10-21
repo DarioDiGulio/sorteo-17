@@ -67,10 +67,16 @@ def init_db():
                         numero   INTEGER PRIMARY KEY,
                         nombre   TEXT NOT NULL,
                         apellido TEXT NOT NULL,
-                        email    TEXT NOT NULL,
-                        fecha    TEXT NOT NULL
+                        email    TEXT,
+                        fecha    TEXT NOT NULL,
+                        vendedor TEXT,
+                        telefono TEXT
                     )
                 ''')
+                # Migración de tablas existentes: el email dejó de pedirse y se agregó vendedor
+                c.execute('ALTER TABLE numeros ALTER COLUMN email DROP NOT NULL')
+                c.execute('ALTER TABLE numeros ADD COLUMN IF NOT EXISTS vendedor TEXT')
+                c.execute('ALTER TABLE numeros ADD COLUMN IF NOT EXISTS telefono TEXT')
                 c.execute('''
                     CREATE TABLE IF NOT EXISTS meta (
                         clave TEXT PRIMARY KEY,
@@ -215,11 +221,15 @@ def numeros():
 def reservar():
     nombre   = request.form.get('nombre',   '').strip()
     apellido = request.form.get('apellido', '').strip()
-    email    = request.form.get('email',    '').strip().lower()
+    telefono = request.form.get('telefono', '').strip() or None
+    vendedor = request.form.get('vendedor', '').strip() or None
     nums_raw = request.form.get('numeros',  '')
 
-    if not all([nombre, apellido, email, nums_raw]):
+    if not all([nombre, apellido, nums_raw]):
         return redirect(url_for('numeros', err='Completá todos los campos'))
+
+    if not (telefono or vendedor):
+        return redirect(url_for('numeros', err='Completá tu teléfono o quién te vendió: si no, no tenemos forma de contactarte si ganás.'))
 
     try:
         nums = [int(n) for n in nums_raw.split(',') if n.strip()]
@@ -244,8 +254,8 @@ def reservar():
         fecha = datetime.now().isoformat()
         for n in nums:
             c.execute(
-                'INSERT INTO numeros (numero, nombre, apellido, email, fecha) VALUES (%s, %s, %s, %s, %s)',
-                (n, nombre, apellido, email, fecha)
+                'INSERT INTO numeros (numero, nombre, apellido, fecha, vendedor, telefono) VALUES (%s, %s, %s, %s, %s, %s)',
+                (n, nombre, apellido, fecha, vendedor, telefono)
             )
 
     nums_str = ','.join(str(n) for n in sorted(nums))
@@ -292,16 +302,21 @@ def admin():
     venta = cfg.get('venta', {})
 
     with get_db() as c:
-        c.execute('SELECT numero, nombre, apellido, email, fecha FROM numeros ORDER BY fecha DESC')
+        c.execute('SELECT numero, nombre, apellido, email, fecha, vendedor, telefono FROM numeros ORDER BY fecha DESC')
         rows = c.fetchall()
 
     compradores = {}
     for r in rows:
-        key = (r['nombre'], r['apellido'], r['email'])
+        key = (r['nombre'], r['apellido'], r['email'] or '')
         if key not in compradores:
             compradores[key] = {'nombre': r['nombre'], 'apellido': r['apellido'],
-                                'email': r['email'], 'fecha': r['fecha'], 'numeros': []}
+                                'email': r['email'] or '', 'fecha': r['fecha'],
+                                'numeros': [], 'vendedores': [], 'telefonos': []}
         compradores[key]['numeros'].append(r['numero'])
+        if r['vendedor'] and r['vendedor'] not in compradores[key]['vendedores']:
+            compradores[key]['vendedores'].append(r['vendedor'])
+        if r['telefono'] and r['telefono'] not in compradores[key]['telefonos']:
+            compradores[key]['telefonos'].append(r['telefono'])
 
     compradores = sorted(compradores.values(), key=lambda x: x['fecha'], reverse=True)
 
@@ -343,8 +358,8 @@ def admin_save_config():
 def admin_delete_comprador():
     d = request.json
     with get_db() as c:
-        c.execute('DELETE FROM numeros WHERE nombre=%s AND apellido=%s AND email=%s',
-                  (d['nombre'], d['apellido'], d['email']))
+        c.execute("DELETE FROM numeros WHERE nombre=%s AND apellido=%s AND COALESCE(email, '')=%s",
+                  (d['nombre'], d['apellido'], d.get('email', '')))
     return jsonify(ok=True)
 
 

@@ -329,7 +329,8 @@ tr:hover td{background:rgba(255,255,255,.04);}
             <tr>
               <td>
                 <div style="font-weight:700">{{ c.nombre }} {{ c.apellido }}</div>
-                <div style="font-size:.8rem;color:rgba(255,255,255,.45)">{{ c.email }}</div>
+                {% if c.telefonos %}<div style="font-size:.8rem;color:rgba(255,255,255,.45)">📞 {{ c.telefonos|join(', ') }}</div>{% endif %}
+                {% if c.vendedores %}<div style="font-size:.8rem;color:rgba(255,255,255,.45)">Vendió: {{ c.vendedores|join(', ') }}</div>{% endif %}
               </td>
               <td>
                 <div class="num-chips">
@@ -359,7 +360,7 @@ tr:hover td{background:rgba(255,255,255,.04);}
       <div class="table-wrap">
         <table>
           <thead><tr>
-            <th>Comprador</th><th>Email</th><th>Números</th><th>Fecha</th><th></th>
+            <th>Comprador</th><th>Vendedor</th><th>Números</th><th>Fecha</th><th></th>
           </tr></thead>
           <tbody id="compradores-tbody">
             {% if not compradores %}
@@ -370,8 +371,10 @@ tr:hover td{background:rgba(255,255,255,.04);}
               <td style="font-weight:700">
                 {{ c.nombre }} {{ c.apellido }}
                 <div style="font-size:.75rem;color:rgba(255,255,255,.35);margin-top:2px">{{ c.numeros|length }} número{{ 's' if c.numeros|length != 1 else '' }}</div>
+                {% if c.telefonos %}<div style="font-size:.75rem;color:rgba(255,255,255,.35)">📞 {{ c.telefonos|join(', ') }}</div>{% endif %}
+                {% if c.email %}<div style="font-size:.75rem;color:rgba(255,255,255,.35)">{{ c.email }}</div>{% endif %}
               </td>
-              <td style="color:rgba(255,255,255,.6);font-size:.85rem">{{ c.email }}</td>
+              <td style="color:rgba(255,255,255,.6);font-size:.85rem">{{ c.vendedores|join(', ') or '—' }}</td>
               <td>
                 <div class="num-chips" id="chips-{{ loop.index }}">
                   {% for n in c.numeros | sort %}
@@ -384,7 +387,7 @@ tr:hover td{background:rgba(255,255,255,.04);}
               </td>
               <td style="color:rgba(255,255,255,.45);font-size:.8rem;white-space:nowrap">{{ c.fecha[:16].replace('T',' ') }}</td>
               <td>
-                <button class="btn-remove-item" title="Liberar todos" onclick="deleteComprador('{{ c.nombre }}','{{ c.apellido }}','{{ c.email }}', this)">✕ Todo</button>
+                <button class="btn-remove-item" title="Liberar todos" onclick="deleteComprador(this)">✕ Todo</button>
               </td>
             </tr>
             {% endfor %}
@@ -794,7 +797,8 @@ async function liberarNumero(numero, btn){
 }
 
 /* ── delete comprador (todos) ── */
-async function deleteComprador(nombre,apellido,email,btn){
+async function deleteComprador(btn){
+  const {nombre,apellido,email}=btn.closest('tr').dataset;
   const ok = await showConfirm({icon:'👤', title:'Liberar todos', msg:`¿Liberar todos los números de ${nombre} ${apellido}? Quedarán disponibles para otras personas.`, danger:true});
   if(!ok) return;
   const r=await api('/admin/comprador/delete',{nombre,apellido,email});

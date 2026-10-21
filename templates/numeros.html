@@ -165,7 +165,8 @@
     transition:border-color .2s;
   }
   .form-group input:focus{border-color:var(--dorado);background:rgba(245,197,24,.07);}
-  .modal-error{color:#ff8fa3;font-size:.85rem;font-weight:700;margin-bottom:12px;min-height:1.2em;}
+  .form-group input.invalid{border-color:#ff4d4d;}
+  .modal-error{color:#ff4d4d;font-size:.85rem;font-weight:700;margin-bottom:12px;min-height:1.2em;}
 
   .modal-btns{display:flex;gap:10px;margin-top:6px;}
   .btn-cancelar{
@@ -317,14 +318,18 @@
         <input type="text" name="apellido" id="fApellido" placeholder="Tu apellido" required autocomplete="family-name"/>
       </div>
       <div class="form-group">
-        <label>Email</label>
-        <input type="email" name="email" id="fEmail" placeholder="tu@email.com" required autocomplete="email"/>
+        <label>Teléfono</label>
+        <input type="tel" name="telefono" id="fTelefono" placeholder="Tu teléfono" autocomplete="tel"/>
+      </div>
+      <div class="form-group">
+        <label>¿Quién te vendió?</label>
+        <input type="text" name="vendedor" id="fVendedor" placeholder="Nombre de quien te vendió" autocomplete="off"/>
       </div>
       {% if payment_link %}
       <div class="modal-pago">
         <div class="modal-pago-icon">💳</div>
         <div class="modal-pago-text">
-          Confirmá tu reserva y luego <strong>realizá el pago</strong> para asegurar tus números. Te vamos a enviar el link también por email.
+          Confirmá tu reserva y luego <strong>realizá el pago</strong> para asegurar tus números.
         </div>
       </div>
       {% endif %}
@@ -422,18 +427,34 @@ function openModal(){
   document.getElementById('modalNums').innerHTML=nums.map(n=>`<span class="modal-chip">${n}</span>`).join('');
   document.getElementById('modalTotal').innerHTML=`Total: <span>${fmtPeso(total)}</span>`;
   document.getElementById('modalError').textContent='';
+  contactoFields.forEach(f=>f.classList.remove('invalid'));
   document.getElementById('modal').classList.remove('hidden');
 }
 function closeModal(){document.getElementById('modal').classList.add('hidden');}
 document.getElementById('modal').addEventListener('click',e=>{if(e.target===document.getElementById('modal'))closeModal();});
 
 /* ── submit ── */
+const contactoFields=[document.getElementById('fTelefono'),document.getElementById('fVendedor')];
+contactoFields.forEach(f=>f.addEventListener('input',()=>{
+  if(contactoFields.some(x=>x.value.trim())){
+    contactoFields.forEach(x=>x.classList.remove('invalid'));
+    document.getElementById('modalError').textContent='';
+  }
+}));
+
 async function submitReserva(e){
   e.preventDefault();
   const btn=document.getElementById('btnConfirmar');
   const spinner=document.getElementById('confirmSpinner');
   const txt=document.getElementById('confirmText');
   const errEl=document.getElementById('modalError');
+
+  // Sin teléfono ni vendedor no hay forma de contactar al ganador
+  if(!contactoFields.some(f=>f.value.trim())){
+    contactoFields.forEach(f=>f.classList.add('invalid'));
+    errEl.textContent='Completá tu teléfono o quién te vendió: si no, no tenemos forma de contactarte si ganás.';
+    return;
+  }
 
   btn.disabled=true;spinner.style.display='block';txt.style.display='none';
 
