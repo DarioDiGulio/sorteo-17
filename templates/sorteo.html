@@ -2,25 +2,7 @@
 {% block title %}Gran Sorteo – Club 17 de Octubre{% endblock %}
 
 {% block extra_css %}
-  /* ── premios ── */
-  .premio-card{
-    display:flex;align-items:center;gap:16px;
-    background:rgba(255,255,255,.05);
-    border-left:4px solid var(--rojo);
-    border-radius:12px;padding:14px 18px;margin-bottom:10px;
-    animation:slideRight .5s ease-out both;
-    transition:transform .2s,background .2s;
-  }
-  .premio-card:nth-child(1){border-left-color:var(--dorado);}
-  .premio-card:nth-child(2){border-left-color:#c0c0c0;}
-  .premio-card:nth-child(3){border-left-color:#cd7f32;}
-  .premio-card:hover{transform:translateX(6px);background:rgba(255,255,255,.09);}
-  @keyframes slideRight{from{opacity:0;transform:translateX(-24px);}to{opacity:1;transform:translateX(0);}}
-  .premio-emoji{font-size:2rem;flex-shrink:0;}
-  .premio-info{flex:1;}
-  .premio-nombre{font-weight:900;font-size:1.05rem;color:var(--blanco);}
-  .premio-cant{font-size:.8rem;color:rgba(255,255,255,.55);margin-top:2px;}
-  .premio-num{font-family:'Bebas Neue',cursive;font-size:2rem;color:rgba(255,255,255,.12);letter-spacing:1px;}
+  @keyframes bounceIn{from{transform:scale(.4);opacity:0}to{transform:scale(1);opacity:1}}
 
   /* ── sorteo link ── */
   .sorteo-link{
@@ -156,7 +138,7 @@
   @keyframes drumOuterPulse{from{box-shadow:0 0 30px rgba(245,197,24,.2)}to{box-shadow:0 0 70px rgba(245,197,24,.6),0 0 120px rgba(204,30,43,.3)}}
 {% endblock %}
 
-{% block ticker_msgs %}['⚽ CLUB 17 DE OCTUBRE','🏆 GRAN RIFA OFICIAL','🎟️ COMPRÁ TU NÚMERO','💪 APOYÁ AL CLUB','🌟 INCREÍBLES PREMIOS','🎉 ¡BUENA SUERTE!']{% endblock %}
+{% block ticker_msgs %}['⚽ CLUB 17 DE OCTUBRE','🥅 FUTSAL SENIOR','🏆 GRAN RIFA OFICIAL','🎟️ COMPRÁ TU NÚMERO','💪 APOYÁ AL CLUB','🌟 INCREÍBLES PREMIOS','🎉 ¡BUENA SUERTE!']{% endblock %}
 
 {% block body %}
 <div class="container">
@@ -170,23 +152,12 @@
       <span style="color:var(--dorado)">Gran Rifa</span><br>{{ config.titulo }}
     </div>
     <div style="margin-top:10px;font-size:1rem;color:rgba(255,255,255,.75);">{{ config.subtitulo }}</div>
-    @keyframes bounceIn{from{transform:scale(.4);opacity:0}to{transform:scale(1);opacity:1}}
   </header>
 
   <div class="divider"><div class="divider-line"></div><div class="divider-icon">⚽</div><div class="divider-line"></div></div>
 
   {# ── Premios ── #}
-  <div class="section-title"><span>🏆</span> Premios en juego</div>
-  {% for p in config.premios %}
-  <div class="premio-card" style="animation-delay:{{ loop.index0 * 0.1 }}s">
-    <div class="premio-emoji">{{ p.emoji or '🎁' }}</div>
-    <div class="premio-info">
-      <div class="premio-nombre">{{ p.nombre }}</div>
-      <div class="premio-cant">{{ p.cantidad }} ganador{% if p.cantidad > 1 %}es{% endif %}</div>
-    </div>
-    <div class="premio-num">#{{ loop.index }}</div>
-  </div>
-  {% endfor %}
+  {% include '_premios.html' %}
 
   {# ── Modo consulta vs sorteo activo ── #}
   {% if config.resultados %}

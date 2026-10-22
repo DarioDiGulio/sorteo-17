@@ -412,6 +412,10 @@ tr:hover td{background:rgba(255,255,255,.04);}
           <label>Subtítulo</label>
           <input type="text" id="s-subtitulo" value="{{ config.subtitulo }}"/>
         </div>
+        <div class="form-group">
+          <label>Fecha del sorteo</label>
+          <input type="text" id="s-fecha" value="{{ config.fechaSorteo }}" placeholder="15 de Noviembre"/>
+        </div>
       </div>
       <div style="margin-bottom:16px">
         <label style="display:flex;align-items:center;gap:12px;cursor:pointer;width:fit-content">
@@ -660,6 +664,7 @@ async function saveGeneral(){
   const r = await api('/admin/config',{
     titulo: document.getElementById('s-titulo').value,
     subtitulo: document.getElementById('s-subtitulo').value,
+    fechaSorteo: document.getElementById('s-fecha').value.trim(),
     sorteoPublico: _sorteoPublico,
   });
   if(r.ok){showOk('ok-general');showToast('✓ Guardado');}else showToast('Error: '+r.error);

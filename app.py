@@ -46,6 +46,7 @@ def get_db():
 DEFAULT_CONFIG = {
     'titulo':        'Sorteo Club 17 de Octubre',
     'subtitulo':     '¡Participá y ganá!',
+    'fechaSorteo':   '15 de Noviembre',
     'sorteoPublico': True,
     'premios':       [],
     'resultados':    None,
@@ -123,6 +124,7 @@ def get_config():
         cfg = json.loads(row['valor']) if row else {}
     cfg.setdefault('titulo', 'Gran Sorteo')
     cfg.setdefault('subtitulo', '')
+    cfg.setdefault('fechaSorteo', '15 de Noviembre')
     cfg.setdefault('sorteoPublico', True)
     cfg.setdefault('premios', [])
     cfg.setdefault('resultados', [])

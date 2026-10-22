@@ -102,6 +102,26 @@
     footer{text-align:center;padding:20px;font-size:.75rem;color:rgba(255,255,255,.25);letter-spacing:1px;}
     footer img{width:24px;vertical-align:middle;opacity:.35;margin-right:6px;}
 
+    /* ── premios ── */
+    .premio-card{
+      display:flex;align-items:center;gap:16px;
+      background:rgba(255,255,255,.05);
+      border-left:4px solid var(--rojo);
+      border-radius:12px;padding:14px 18px;margin-bottom:10px;
+      animation:slideRight .5s ease-out both;
+      transition:transform .2s,background .2s;
+    }
+    .premio-card:nth-child(1){border-left-color:var(--dorado);}
+    .premio-card:nth-child(2){border-left-color:#c0c0c0;}
+    .premio-card:nth-child(3){border-left-color:#cd7f32;}
+    .premio-card:hover{transform:translateX(6px);background:rgba(255,255,255,.09);}
+    @keyframes slideRight{from{opacity:0;transform:translateX(-24px);}to{opacity:1;transform:translateX(0);}}
+    .premio-emoji{font-size:2rem;flex-shrink:0;}
+    .premio-info{flex:1;}
+    .premio-nombre{font-weight:900;font-size:1.05rem;color:var(--blanco);}
+    .premio-cant{font-size:.8rem;color:rgba(255,255,255,.55);margin-top:2px;}
+    .premio-num{font-family:'Bebas Neue',cursive;font-size:2rem;color:rgba(255,255,255,.12);letter-spacing:1px;}
+
     {% block extra_css %}{% endblock %}
   </style>
 </head>

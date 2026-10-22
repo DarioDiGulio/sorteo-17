@@ -1,0 +1,13 @@
+<div class="section-title"><span>🏆</span> Premios en juego</div>
+<div class="premios-lista">
+  {% for p in config.premios %}
+  <div class="premio-card" style="animation-delay:{{ loop.index0 * 0.1 }}s">
+    <div class="premio-emoji">{{ p.emoji or '🎁' }}</div>
+    <div class="premio-info">
+      <div class="premio-nombre">{{ p.nombre }}</div>
+      <div class="premio-cant">{{ p.cantidad }} ganador{% if p.cantidad > 1 %}es{% endif %}</div>
+    </div>
+    <div class="premio-num">#{{ loop.index }}</div>
+  </div>
+  {% endfor %}
+</div>
