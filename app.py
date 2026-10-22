@@ -10,6 +10,7 @@ import psycopg2.extras
 from dotenv import load_dotenv
 from flask import (Flask, jsonify, redirect, render_template, request,
                    send_from_directory, session, url_for)
+from werkzeug.middleware.proxy_fix import ProxyFix
 
 load_dotenv()
 
@@ -25,6 +26,8 @@ DB_CONFIG = {
 UMBRAL_EXPANSION = 10
 
 app = Flask(__name__, template_folder='templates')
+# Detrás del proxy del hosting: respeta https y el dominio real (necesario para las URLs absolutas de las previsualizaciones)
+app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
 app.secret_key = os.environ.get('SECRET_KEY', 'sorteo17oct-dev')
 
 
@@ -195,13 +198,16 @@ def logo():
     return send_from_directory(BASE, 'logo17.png')
 
 
+# Imagen de previsualización para WhatsApp/redes (1200x630)
+@app.route('/og-image.jpg')
+def og_image():
+    return send_from_directory(BASE, 'og-image.jpg')
+
+
 # ── SORTEO ────────────────────────────────────────────
 @app.route('/')
-def sorteo():
-    cfg = get_config()
-    if not cfg.get('sorteoPublico', True):
-        return redirect(url_for('numeros'))
-    return render_template('sorteo.html', config=cfg)
+def index():
+    return redirect(url_for('numeros'))
 
 
 # ── NÚMEROS ───────────────────────────────────────────
@@ -353,6 +359,13 @@ def admin():
             'compradores': len(compradores),
         },
     )
+
+
+# ── ADMIN SORTEO ──────────────────────────────────────
+@app.route('/admin/sorteo')
+@admin_required
+def sorteo():
+    return render_template('sorteo.html', config=get_config())
 
 
 # ── ADMIN CONFIG (AJAX) ───────────────────────────────
